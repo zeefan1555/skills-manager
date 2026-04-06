@@ -1,6 +1,6 @@
 # Raw Command
 
-> **引用规范**：`references/note-format.md`（Raw 笔记格式、Vault 目录、Area 管理）、`references/obsidian-cli.md`（CLI 语法）、`references/markdown.md`（正文格式）
+> **引用规范**：`references/note-format.md`（Raw 笔记格式、Summary 格式、Vault 目录、Area 管理）、`references/obsidian-cli.md`（CLI 语法）、`references/markdown.md`（正文格式）
 
 ## Trigger
 
@@ -27,15 +27,14 @@
 | URL 模式 | 抓取工具 | 说明 |
 |----------|----------|------|
 | `*.larkoffice.com/*`, `*.feishu.cn/*` | feishu-docx CLI | 见 `references/feishu-docx.md` |
-| `*.bytedance.net/*`（内网） | bytedcli-tools | 字节内部工具链 |
-| `twitter.com/*`, `x.com/*` | 现有 tweet 抓取逻辑 | 保留线程结构 |
-| 其他所有 URL | **TBD** | 暂不支持自动抓取，提示用户手动提供内容 |
+| `*.bytedance.net/*`（内网） | bytedcli-tools | ~/.skills-manager/skills/bytedcli-tools/ |
+| 其他所有 URL | agent-reach | ~/.skills-manager/skills/agent-reach/ |
 
 > 通用网页抓取能力暂不实现。遇到路由表未覆盖的 URL 时，提示用户手动粘贴网页内容或后续引入通用抓取技能。
 
 ## 目标
 
-把原始内容保存到 `raw/{area}/`，补齐 frontmatter 并生成 summary，不直接写知识结论。
+把原始内容保存到 `raw/{area}/`，补齐 frontmatter，生成 summary，并产出 Summary 文档到 `wiki/summaries/inbox/`。
 
 低摩擦入库 —— 成功落盘是第一优先级。
 
@@ -62,16 +61,24 @@
    - 使用 Unix 命令：`mkdir -p raw/{area}` + `cat > raw/{area}/{filename}.md`
    - 也可使用 `obsidian create`（见 `references/obsidian-cli.md`），但 Unix 命令更通用
    - **文件直接写入最终位置，不经过 _inbox/**
-8. 去重检查
+8. **生成 Summary 文档（L3 来源层）**
+   - 创建 `wiki/summaries/inbox/S-{编号}-{slug}.md`
+   - 格式遵循 `references/note-format.md` → Summary 格式，包含：
+     - 完整 frontmatter（title, source_type, tags, area, created 等）
+     - **原文要点**：从 raw 正文提炼的核心观点列表
+     - **关键结论**：最重要的 2-3 条 takeaway
+     - **Backlink**：指向对应 raw 文件 `[[raw/{area}/{filename}]]`
+   - 使用 Unix 命令：`mkdir -p wiki/summaries/inbox` + `cat > wiki/summaries/inbox/S-{编号}-{slug}.md`
+9. 去重检查
    - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/`）
    - 重复时提示用户：覆盖 / 重命名 / 跳过
-9. 记录活动
-   - append 到 `wiki/log.md`，格式 `## [{date}] ingest | {title}`
-10. 返回给用户
-    - 保存路径
+10. 记录活动
+    - append 到 `wiki/log.md`，格式 `## [{date}] ingest | {title}`
+11. 返回给用户
+    - 保存路径（raw 文件 + Summary 文档）
     - area
     - summary 摘要
-    - 当前未编译总数（通过对比 raw/ 文件与 wiki/log.md 编译记录）
+    - 当前未编译总数（`ls wiki/summaries/inbox/ | wc -l`）
     - 推断可能受影响的页面类型（如 topic / concept）
     - 智能编排建议（未编译 ≤ 5 → 是否立刻 compile？）
 
@@ -79,7 +86,7 @@
 
 raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
 
-所有状态变更通过 `wiki/log.md` 的编译记录体现，不回写 raw 文件。
+编译状态由文件夹位置体现（`wiki/summaries/inbox/` = 未编译，`wiki/summaries/` 根目录 = 已编译），不回写 raw 文件。
 
 ## _inbox Triage 子流程
 
@@ -90,9 +97,10 @@ raw 命令可处理 `_inbox/` 中已存在但缺少 frontmatter 的文件（如 
 3. 补全 frontmatter（title, source_type, tags, area, summary 等）
 4. 生成 summary
 5. 写入新文件到 `raw/{area}/{filename}.md`
-6. 成功后删除 `_inbox/{filename}.md`
+6. 生成 Summary 文档到 `wiki/summaries/inbox/S-{编号}-{slug}.md`
+7. 成功后删除 `_inbox/{filename}.md`
 
-> **原子性保证**：采用"写新删旧"策略。先在 `raw/{area}/` 写入完整新文件，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/{area}/），要么失败（原文件仍在 _inbox/），不会出现半成品。
+> **原子性保证**：采用"写新删旧"策略。先在 `raw/{area}/` 写入完整新文件并生成 Summary 文档到 `wiki/summaries/inbox/`，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/{area}/ + Summary 在 wiki/summaries/inbox/），要么失败（原文件仍在 _inbox/），不会出现半成品。
 
 触发方式：`raw --triage` 或当用户说"处理一下 inbox"时自动触发。
 
@@ -108,12 +116,12 @@ raw /path/to/articles/
 raw https://url1 https://url2 https://url3
 ```
 
-每个源生成独立 raw 笔记。处理完成后汇总：
+每个源生成独立 raw 笔记 + Summary 文档。处理完成后汇总：
 
 ```text
 Batch ingest: 5/6 succeeded, 1 failed
-  ✓ raw/ml/attention-mechanism.md
-  ✓ raw/ml/transformer-architecture.md
+  ✓ raw/ml/attention-mechanism.md → wiki/summaries/inbox/S-042-attention-mechanism.md
+  ✓ raw/ml/transformer-architecture.md → wiki/summaries/inbox/S-043-transformer-architecture.md
   ✗ https://broken-url.com — 404 Not Found
 Uncompiled total: 12 → suggest `compile --batch`
 ```
@@ -128,7 +136,7 @@ Uncompiled total: 12 → suggest `compile --batch`
 
 ## 约束
 
-- `raw` 阶段生成 summary 写入 frontmatter，但不生成 `wiki/summaries` 或 `wiki/concepts`
+- `raw` 阶段生成 Summary 文档到 `wiki/summaries/inbox/`，但不生成 `wiki/concepts`
 - `raw` 阶段不直接写 topic / synthesis 结论页
 - 目标是低摩擦入库，不追求一次整理到位
 - 如果用户只是"先存一下"，优先成功落盘

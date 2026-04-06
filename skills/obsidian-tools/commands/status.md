@@ -1,6 +1,6 @@
 # Status Command
 
-> **引用规范**：`references/note-format.md`（Vault 目录）、`references/obsidian-cli.md`（files 命令）
+> **引用规范**：`references/note-format.md`（Vault 目录、4 层检索层级）、`references/obsidian-cli.md`（files 命令）
 
 ## Trigger
 
@@ -14,16 +14,18 @@
 ## 执行步骤
 
 1. 统计各目录文件数（目录结构见 `references/note-format.md` → Vault 目录）
-   - `raw/`：总数、未编译数（不在 wiki/log.md 编译记录中）
+   - `raw/`：总数、待编译数（wiki/summaries/inbox/ 中的文件数）
    - `_inbox/` 积压：文件数量和最早文件日期
    - `wiki/summaries/`：总数
+   - `wiki/summaries/inbox/`：待编译数量
    - `wiki/concepts/`：总数
    - `wiki/topics/`：总数
    - `wiki/syntheses/`：总数
-   - `wiki/indexes/`：总数
-   - `wiki/index.md`：是否存在、最近更新时间
+   - `wiki/glossary.md`：是否存在
+   - `wiki/index.md`：是否存在、最近更新时间、覆盖的 concept 数
    - `wiki/log.md`：条目数、最近更新时间
    - `outputs/`：各子目录数（qa、health、remnote、slides、charts）
+   - `outputs/qa/` 中 `promote_status: pending` 的数量
 2. 计算规模指标
    - 总词数估算：`find wiki/ -name "*.md" -exec wc -w {} + | tail -1`
    - 总文件数
@@ -35,8 +37,10 @@
    - 如无历史数据：标注"首次统计"
 5. 健康快照
    - pending 积压数（及超 7 天的数量）
+   - inbox 积压数（wiki/summaries/inbox/ 中的文件数）
    - 断链数（快速抽样检查 10 条 wikilinks）
    - 最近 lint 报告摘要（如有）
+   - pending promote 数量（`outputs/qa/` 中等待反哺的 QA）
 6. append 到 `wiki/log.md`，格式 `## [{date}] status | vault snapshot`
 
 ## 返回格式
@@ -45,15 +49,19 @@
 📊 Knowledge Base Status
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scale:
-  Raw:        {total} ({uncompiled} uncompiled)
-  Inbox:      {n} files ({oldest_date})
-  Summaries:  {n}
-  Concepts:   {n}
-  Topics:     {n}
-  Syntheses:  {n}
-  Indexes:    {n}
-  Total words: ~{n}K
-  Outputs:    {n} (qa: {n}, health: {n}, remnote: {n}, slides: {n}, charts: {n})
+  Raw:          {total} ({uncompiled} uncompiled)
+  Inbox:        {n} files ({oldest_date})
+  Summaries:    {n} ({inbox} in inbox)
+  Concepts:     {n}
+  Topics:       {n}
+  Syntheses:    {n}
+  Glossary:     {exists? ✓/✗}
+  Index:        {concept_count} concepts indexed, updated {date}
+  Total words:  ~{n}K
+  Outputs:      {n} (qa: {n}, health: {n}, remnote: {n}, slides: {n}, charts: {n})
+
+Pending Promote:
+  QA awaiting compile: {n}
 
 Growth (vs last check on {date}):
   Raw:      +{n}
@@ -75,12 +83,14 @@ Recently Modified:
 
 Health:
   ⚠ {n} raw pending > 7 days
+  ⚠ {n} summaries in inbox backlog
   ⚠ {n} broken links (sampled)
   ⚠ {n} stale conclusions flagged by lint
+  ⚠ {n} QA pending promote
   ✓ Last lint: {n} issues ({date})
 
 Suggestions:
-  → Run `compile` to process {n} pending raw
+  → Run `compile` to process {n} pending raw + {n} pending promote
   → Run `lint` (last run > 7 days ago)
 ```
 

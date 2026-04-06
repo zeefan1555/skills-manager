@@ -1,6 +1,6 @@
 # Ask Command
 
-> **引用规范**：`references/note-format.md`（QA Output 格式、promote 状态机）、`references/obsidian-cli.md`（search / backlinks）、`references/markdown.md`（正文格式）
+> **引用规范**：`references/note-format.md`（4 层检索层级、QA Output 格式、promote 状态机）、`references/obsidian-cli.md`（search / backlinks）、`references/markdown.md`（正文格式）
 
 ## Trigger
 
@@ -11,7 +11,7 @@
 
 ## 目标
 
-统一入口处理所有知识库查询请求。根据问题复杂度自动选择 shallow（关键词搜索）或 deep（语义推理）模式。
+统一入口处理所有知识库查询请求。根据问题复杂度自动选择 shallow（关键词搜索）或 deep（语义推理）模式。检索遵循 4 层层级：L1 index.md → L2 concepts → L3 summaries → L4 raw。
 
 ## 模式
 
@@ -22,8 +22,8 @@
 - **工具**：`obsidian search` 或 `rg`
 - **适用**：「找一下关于 X 的笔记」「有没有提过 Y」「列出所有 Z 相关的」
 - **流程**：
-  1. 先读 `wiki/index.md` / `wiki/indexes/` 做导航
-  2. CLI 粗筛：`obsidian search query="..." path="wiki" limit=10`
+  1. 先读 `wiki/index.md`（唯一索引）做导航——按 area 分组的 concept 目录表快速定位目标 concept
+  2. CLI 粗筛：`obsidian search query="..." path="wiki" limit=10`（concept 有中文 title + aliases，中英文关键词都能命中）
   3. 如果命中太少，扩大到 `path="raw"` 再搜一轮
   4. LLM 精排：读取候选笔记 frontmatter + 前 200 字，按相关度排序
   5. 输出 top-3 结果及排序理由
@@ -34,27 +34,32 @@
 
 - **工具**：读取相关笔记全文 + LLM 推理
 - **适用**：「总结一下我对 X 的认知」「X 和 Y 有什么关系」「比较 A 和 B」
-- **流程**：采用多轮自主研究模式
+- **流程**：采用多轮自主研究模式，沿 4 层检索层级逐层深入
 
 #### 多轮自主研究（Deep 核心）
 
 ```text
-  ┌─→ 读取命中笔记 ─→ 提取关键信息
-  │                        │
-  │                  发现新线索？
-  │                   ↙        ↘
-  │                 是           否
-  │                 ↓            ↓
-  │         追踪新线索      生成回答
-  │         (search / backlinks / raw)
-  │                 │
-  └─────────────────┘
+  ┌─→ 读取命中的 concept（L2）─→ 提取关键信息
+  │                                    │
+  │                              发现新线索？
+  │                               ↙        ↘
+  │                             是           否
+  │                             ↓            ↓
+  │                     追踪新线索      生成回答
+  │                     │
+  │    ┌────────────────┤
+  │    │                │
+  │    ↓                ↓
+  │  related concepts   summaries（L3）→ raw（L4）
+  │    │                │
+  └────┴────────────────┘
 ```
 
-- 读取命中的 summaries / concepts 正文
+- 读取命中的 concepts 正文（L2 概念层，含实战笔记）
+- **沿 `related` 链接追踪**关联 concept（L2 → L2 横向跳转）
+- 需要更多细节时，**下沉到 summaries**（L2 → L3）
+- 需要原文时，**继续下沉到 raw**（L3 → L4）
 - 检查 backlinks：`obsidian backlinks path="..." counts`
-- 发现引用的其他 concept → 继续读取
-- 如需原文细节 → 回溯对应 `raw/` 文件
 - **每轮最多追踪 3 条新线索**，防止无限递归
 - **最多 5 轮**研究循环，超过后总结当前发现并输出
 
@@ -96,7 +101,7 @@ Agent 根据问题复杂度自动从 shallow 升级到 deep：
 2. **普通归档结果**：保存到 `outputs/qa/{YYYY-MM-DD}-{slug}.md`
 3. append 到 `wiki/log.md`，格式 `## [{date}] ask | {question}`
 4. 如是综合页，同时回写相关 concept / topic
-5. 如暂不适合直写 wiki：设 `promote_status: pending`，建议用户运行 `compile --promote`
+5. 如暂不适合直写 wiki：设 `promote_status: pending`，等 compile 自动扫描并提取
 
 ### 命名规范
 
@@ -134,7 +139,7 @@ Agent 根据问题复杂度自动从 shallow 升级到 deep：
 
 - 问题的结构化回答
 - 使用的模式（shallow / deep）及原因
-- 研究路径（deep 模式：经过几轮，追踪了哪些线索）
+- 研究路径（deep 模式：经过几轮，追踪了哪些线索，下沉到了哪一层）
 - 引用了哪些 wiki 文档
 - 是否写入 `wiki/syntheses/` 或归档到 `outputs/qa/`
 - 知识缺口列表（如有）+ 建议的补充操作
