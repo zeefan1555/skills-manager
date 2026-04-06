@@ -2,23 +2,17 @@
   "version": "2.0.1",
   "skills_dir": "/Users/bytedance/.skills-manager/skills",
   "tools": {
-    "qwen-code": {
+    "zencoder": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.qwen/skills",
-      "config_path": "/Users/bytedance/.qwen"
+      "skills_path": "/Users/bytedance/.zencoder/skills",
+      "config_path": "/Users/bytedance/.zencoder"
     },
-    "iflow": {
+    "junie": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.iflow/skills",
-      "config_path": "/Users/bytedance/.iflow"
-    },
-    "claude-code": {
-      "enabled": true,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.claude/skills",
-      "config_path": "/Users/bytedance/.claude"
+      "skills_path": "/Users/bytedance/.junie/skills",
+      "config_path": "/Users/bytedance/.junie"
     },
     "roo-code": {
       "enabled": false,
@@ -26,65 +20,17 @@
       "skills_path": "/Users/bytedance/.roo/skills",
       "config_path": "/Users/bytedance/.roo"
     },
-    "codex": {
-      "enabled": true,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.codex/skills",
-      "config_path": "/Users/bytedance/.codex"
-    },
     "pi": {
       "enabled": false,
       "detected": false,
       "skills_path": "/Users/bytedance/.pi/agent/skills",
       "config_path": "/Users/bytedance/.pi/agent"
     },
-    "qoder": {
+    "continue": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.qoder/skills",
-      "config_path": "/Users/bytedance/.qoder"
-    },
-    "trae": {
-      "enabled": false,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.trae/skills",
-      "config_path": "/Users/bytedance/.trae"
-    },
-    "droid": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.factory/skills",
-      "config_path": "/Users/bytedance/.factory"
-    },
-    "zencoder": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.zencoder/skills",
-      "config_path": "/Users/bytedance/.zencoder"
-    },
-    "openclaw": {
-      "enabled": false,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.openclaw/skills",
-      "config_path": "/Users/bytedance/.openclaw"
-    },
-    "augment": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.augment/skills",
-      "config_path": "/Users/bytedance/.augment"
-    },
-    "cline": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.cline/skills",
-      "config_path": "/Users/bytedance/.cline"
-    },
-    "antigravity": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.antigravity/skills",
-      "config_path": "/Users/bytedance/.antigravity"
+      "skills_path": "/Users/bytedance/.continue/skills",
+      "config_path": "/Users/bytedance/.continue"
     },
     "crush": {
       "enabled": false,
@@ -98,17 +44,11 @@
       "skills_path": "/Users/bytedance/.config/opencode/skills",
       "config_path": "/Users/bytedance/.config/opencode"
     },
-    "goose": {
+    "augment": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.config/goose/skills",
-      "config_path": "/Users/bytedance/.config/goose"
-    },
-    "kiro": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.kiro/skills",
-      "config_path": "/Users/bytedance/.kiro"
+      "skills_path": "/Users/bytedance/.augment/skills",
+      "config_path": "/Users/bytedance/.augment"
     },
     "codebuddy": {
       "enabled": false,
@@ -116,41 +56,47 @@
       "skills_path": "/Users/bytedance/.codebuddy/skills",
       "config_path": "/Users/bytedance/.codebuddy"
     },
-    "commandcode": {
+    "antigravity": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.commandcode/skills",
-      "config_path": "/Users/bytedance/.commandcode"
+      "skills_path": "/Users/bytedance/.antigravity/skills",
+      "config_path": "/Users/bytedance/.antigravity"
     },
-    "windsurf": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.windsurf/skills",
-      "config_path": "/Users/bytedance/.windsurf"
-    },
-    "cursor": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.cursor/skills",
-      "config_path": "/Users/bytedance/.cursor"
-    },
-    "gemini": {
+    "openclaw": {
       "enabled": false,
       "detected": true,
-      "skills_path": "/Users/bytedance/.gemini/skills",
-      "config_path": "/Users/bytedance/.gemini"
+      "skills_path": "/Users/bytedance/.openclaw/skills",
+      "config_path": "/Users/bytedance/.openclaw"
     },
-    "junie": {
+    "droid": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.junie/skills",
-      "config_path": "/Users/bytedance/.junie"
+      "skills_path": "/Users/bytedance/.factory/skills",
+      "config_path": "/Users/bytedance/.factory"
     },
-    "vercel-skills": {
-      "enabled": false,
+    "claude-code": {
+      "enabled": true,
       "detected": true,
-      "skills_path": "/Users/bytedance/.agents/skills",
-      "config_path": "/Users/bytedance/.agents"
+      "skills_path": "/Users/bytedance/.claude/skills",
+      "config_path": "/Users/bytedance/.claude"
+    },
+    "codex": {
+      "enabled": true,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.codex/skills",
+      "config_path": "/Users/bytedance/.codex"
+    },
+    "kiro": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.kiro/skills",
+      "config_path": "/Users/bytedance/.kiro"
+    },
+    "iflow": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.iflow/skills",
+      "config_path": "/Users/bytedance/.iflow"
     },
     "kilo-code": {
       "enabled": false,
@@ -158,14 +104,75 @@
       "skills_path": "/Users/bytedance/.kilocode/skills",
       "config_path": "/Users/bytedance/.kilocode"
     },
-    "continue": {
+    "qwen-code": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.continue/skills",
-      "config_path": "/Users/bytedance/.continue"
+      "skills_path": "/Users/bytedance/.qwen/skills",
+      "config_path": "/Users/bytedance/.qwen"
+    },
+    "cursor": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.cursor/skills",
+      "config_path": "/Users/bytedance/.cursor"
+    },
+    "commandcode": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.commandcode/skills",
+      "config_path": "/Users/bytedance/.commandcode"
+    },
+    "vercel-skills": {
+      "enabled": false,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.agents/skills",
+      "config_path": "/Users/bytedance/.agents"
+    },
+    "gemini": {
+      "enabled": false,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.gemini/skills",
+      "config_path": "/Users/bytedance/.gemini"
+    },
+    "cline": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.cline/skills",
+      "config_path": "/Users/bytedance/.cline"
+    },
+    "qoder": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.qoder/skills",
+      "config_path": "/Users/bytedance/.qoder"
+    },
+    "windsurf": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.windsurf/skills",
+      "config_path": "/Users/bytedance/.windsurf"
+    },
+    "trae": {
+      "enabled": false,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.trae/skills",
+      "config_path": "/Users/bytedance/.trae"
+    },
+    "goose": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.config/goose/skills",
+      "config_path": "/Users/bytedance/.config/goose"
     }
   },
   "custom_tools": {
+    "aiden": {
+      "name": "aiden",
+      "config_path": "/Users/bytedance/.aiden",
+      "skills_path": "/Users/bytedance/.aiden/skills",
+      "enabled": true,
+      "icon_path": null
+    },
     "trae-cn": {
       "name": "Trae-cn",
       "config_path": "/Users/bytedance/.trae-cn",
@@ -177,13 +184,6 @@
       "name": "traecli",
       "config_path": "/Users/bytedance/.coco/skills",
       "skills_path": "/Users/bytedance/.coco/skills/skills",
-      "enabled": true,
-      "icon_path": null
-    },
-    "aiden": {
-      "name": "aiden",
-      "config_path": "/Users/bytedance/.aiden",
-      "skills_path": "/Users/bytedance/.aiden/skills",
       "enabled": true,
       "icon_path": null
     }
@@ -202,7 +202,7 @@
     "show_sync_notifications": true,
     "remove_links_when_disabling_tool": false,
     "vault_backup_consent": "granted",
-    "telemetry_consent": "granted",
+    "telemetry_consent": "denied",
     "github_token": null
   },
   "marketplace_sources": [
@@ -231,7 +231,7 @@
   },
   "auth_session": {
     "provider": "github",
-    "access_token": "dfb34296-3ce0-4b7c-b0ba-13b91c91bd0a",
+    "access_token": "615492da-2c6b-4994-a05b-8fddf62fa6a5",
     "refresh_token": "14f3d9c4-316e-4906-b6b2-7d1f355791c9",
     "profile": {
       "username": "zeefan1555",
@@ -240,9 +240,9 @@
   },
   "cloud_sync": {
     "device_id": "15b47291caca48e8b84e76134aa88b59",
-    "last_revision": 3,
-    "last_synced_at": 1775457490,
-    "last_payload_hash": "4d65bcd731c7a9fccd84fc9ed497a82c5d728ed2b9c497ab314dc6f4d006bdb1"
+    "last_revision": 4,
+    "last_synced_at": 1775459888,
+    "last_payload_hash": "6af49743a661d8da6320009e187779791a1b4be12e48d2e7c381661ee1dde839"
   },
   "initialized": true
 }

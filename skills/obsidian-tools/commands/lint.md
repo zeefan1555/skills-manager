@@ -24,7 +24,7 @@
 
 ### 1. 数据一致性
 - frontmatter 字段是否完整（对照 `references/note-format.md` 中的各格式定义）
-- `status: compiled` 的 raw 是否确实有对应 summary
+- wiki/log.md 中标记为已编译的 raw 是否确实有对应 summary
 - concept 的 `sources` 引用是否有效
 - 日期格式是否统一
 - summary 的 `source` backlink 是否指向存在的 raw
@@ -38,9 +38,10 @@
 ### 3. 内容质量
 - 重复概念检测（不同名字但描述同一事物，参考 `commands/compile.md` → Concept 合并策略）
 - 极短或空笔记（< 50 字的 concept / summary）
-- 长期 `status: pending` 未编译的 raw（> 7 天）
+- 长期未编译的 raw（不在 wiki/log.md 编译记录中且 ingested > 7 天前）
 - concept 缺少 `sources` 引用
 - summary 缺少关键结论
+- raw 的 `summary` 字段为空（应由 raw 命令生成）
 
 ### 4. 知识拓展候选
 - 分析现有 concepts 之间的关联，建议缺失的 `related` 链接
@@ -54,12 +55,18 @@
 - 某个 synthesis 是否已被更晚证据部分推翻、却仍标记为 `active`
 - 某个 concept 的 `conflicts` / `open_questions` 是否应该更新
 
+### 6. 架构健康
+- `_inbox/` 积压检查：文件数 > 0 则提示跑 `raw --triage`
+- area 文件夹只含 1 篇笔记的检查（可能过度细分）
+- raw 文件数 vs wiki/log.md 编译记录数不匹配告警
+- raw 的 tags 在 wiki 中没有对应条目（可能 summary 遗漏了关键概念）
+
 ## 执行步骤
 
 1. 收集元数据
    - `obsidian files folder="raw" ext=md`（见 `references/obsidian-cli.md`）
    - `obsidian files folder="wiki" ext=md`
-   - 读取 `_kb_meta/` 下的日志
+   - 读取 `wiki/log.md`
    - 读取 `wiki/log.md` 识别最近更新主题
 2. 逐维度检查（按上述 5 个维度）
 3. 生成报告 → `outputs/health/lint-{YYYY-MM-DD}.md`（格式见 `references/note-format.md` → Lint Report 格式）
@@ -68,7 +75,6 @@
    - 对比 issues 数量变化
    - 标注新增 / 已解决 / 持续存在的问题
 5. 记录 lint 活动
-   - append 到 `_kb_meta/lint_log.md`
    - append 到 `wiki/log.md`（记录本次检查范围、关键问题、是否发现 evidence drift）
 6. 可选：自动修复（`--fix`）
    - 补齐缺失的 frontmatter 字段

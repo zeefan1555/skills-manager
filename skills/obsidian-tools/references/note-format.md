@@ -6,8 +6,9 @@
 
 ```text
 {OBSIDIAN_ROOT}/
+├── _inbox/                 ← Web Clipper / 外部工具落地区（未经 raw 处理）
 ├── wiki/index.md            ← 人类 + LLM 共用主页
-├── wiki/log.md              ← 演化日志（时间序）
+├── wiki/log.md              ← 统一操作日志（时间序）
 ├── raw/                    ← 原始收录（按 area 分子目录）
 │   └── {area}/
 │       └── assets/         ← 关联图片/附件
@@ -27,22 +28,22 @@
 │   ├── remnote/            ← RemNote 导出备份
 │   ├── slides/             ← Marp 幻灯片
 │   └── charts/             ← matplotlib 图表
-└── _kb_meta/               ← 日志等元数据
-    ├── compile_log.md
-    ├── search_log.md
-    ├── ingest_log.md
-    ├── query_log.md
-    ├── lint_log.md
-    └── status_log.md
 ```
 
 `{OBSIDIAN_ROOT}` = `/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent`
+
+## Area 管理
+
+- area 不设固定注册表，由 LLM 根据内容语义自主判断
+- 判断时优先匹配 `raw/` 下已有的子文件夹名称
+- 如果现有 area 都不合适，可以创建新的 area 文件夹
+- 命名规则：小写英文 + 连字符，如 `dev-workflow`、`ai-tools`
+- lint 会检查是否有 area 文件夹只含 1 篇笔记（可能是过度细分）
 
 ## Raw 笔记格式
 
 ```yaml
 ---
-uid: raw-{YYYYMMDD}-{4hex}
 source_url: {url，如有}
 author: {作者，如有}
 published: {发布日期，如有}
@@ -50,19 +51,25 @@ ingested: {datetime}
 ingested_by: manual|lint-impute|batch
 type: article|paper|podcast|tweet|note|repo|dataset|pdf|thread
 area: {领域名}
-status: pending|compiled
-compiled_at: {date，compile 后回写}
 tags:
   - {tag1}
   - {tag2}
+summary: |
+  3-5 句摘要，由 raw 命令在收录时生成。
+  必须覆盖每个 tag 对应的核心观点。
 ---
 ```
+
+> **文件名即 ID**：不再使用 uid 字段，markdown 文件名就是笔记的唯一标识。
+>
+> **不可变约束**：raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
+>
+> **已移除字段**：`uid`、`status`、`compiled_at` 不再使用。编译状态通过 `wiki/log.md` 中的编译记录跟踪。
 
 ## Summary 笔记格式
 
 ```yaml
 ---
-uid: S-{编号}-{slug}
 title: "S-{编号} {标题}"
 source: "[[raw/{area}/{raw-file}]]"
 compiled: {date}
@@ -78,7 +85,6 @@ tags:
 
 - 标题与文件名优先服务于**人类检索**，其次才是 slug 稳定性。
 - 如果用户主要用中文提问、中文检索，`title` 与文件名默认优先中文。
-- `uid` 可以保留稳定 slug，但标题不要只写英文概念名。
 - `outputs/qa/` 的标题默认直接等于用户原问题；文件名也默认直接使用用户原问题。
 - `wiki/syntheses/` 如果由用户问题直接触发，标题优先使用原问题或一条紧贴问题的中文结论。
 - `wiki/concepts/` 和 `wiki/topics/` 如果生成中文标题，英文名优先放到 `aliases`，而不是反过来。
@@ -87,7 +93,6 @@ tags:
 
 ```yaml
 ---
-uid: con-{slug}
 title: "{概念名}"
 aliases:
   - "{别名，如有}"
@@ -112,7 +117,6 @@ tags:
 
 ```yaml
 ---
-uid: topic-{slug}
 title: "{主题名}"
 created: {date}
 updated: {date}
@@ -132,7 +136,6 @@ tags:
 
 ```yaml
 ---
-uid: syn-{YYYYMMDD}-{slug}
 title: "{综合页标题}"
 question: "触发该综合页的问题或任务"
 created: {date}
@@ -157,7 +160,6 @@ tags:
 
 ```yaml
 ---
-uid: qa-{YYYYMMDD}-{slug}
 title: "用户的原始问题"
 question: "用户的原始问题"
 answered_at: {datetime}
@@ -222,7 +224,7 @@ tags:
 
 ## Search 阶段运行时属性
 
-这些属性只在 `search` 阶段维护，优先写 frontmatter property，不要散落到正文。
+这些属性只在 `ask` 阶段维护，优先写 frontmatter property，不要散落到正文。
 
 ```yaml
 search_hits: 2
@@ -232,33 +234,36 @@ remnote_exported_at: 2026-04-05T00:58:10
 remnote_backup: "[[outputs/remnote/2026-04-05-example-remnote]]"
 ```
 
-## Wiki Log 条目格式
+## Wiki Log 格式
+
+`wiki/log.md` 是所有操作的统一日志，格式为 grep 友好的追加型条目：
 
 ```markdown
-## {YYYY-MM-DD HH:mm}
-- action: ingest|compile|query|lint|promote|output
-- summary: 一句话说明这次做了什么
+## [{YYYY-MM-DD HH:mm}] {action} | {title}
 - touched:
   - [[wiki/summaries/S-xxx]]
   - [[wiki/concepts/xxx]]
-  - [[wiki/topics/yyy]]
-  - [[wiki/syntheses/syn-zzz]]
 - source: [[raw/{area}/{file}]] 或外部任务说明
 ```
 
+其中 `action` 可选值：`ingest`、`compile`、`ask`、`lint`、`promote`、`output`
+
+> **wiki/log.md 是编译状态的 source of truth**：compile 通过对比 `raw/` 中的文件名与 log 中的 `compile` 记录来判断哪些文件还未编译。
+
 ## 关键约束
 
-- `raw` 阶段不提前生成 summary / concept
-- `compile` 阶段负责把 `status: pending` 转成 `compiled`
+- `raw` 阶段生成 `summary` 字段写入 frontmatter，但不生成 `wiki/summaries` 或 `wiki/concepts`
+- `compile` 通过 `wiki/log.md` 判断哪些 raw 还未编译（不再依赖 status 字段）
 - `compile` 阶段优先更新受影响页面，不只是机械生成新文件
 - `compile --promote` 负责把 `promote_status: pending` 的 QA 提取入 wiki
 - 高价值问答优先写入 `wiki/syntheses/`，而不是长期停留在 `outputs/qa/`
 - `search_hits` 只记在最终命中的主笔记上
-- `query` 的普通结果归档到 `outputs/qa/`；只有“暂不适合直写 wiki”的结果才设 `promote_status: pending`
-- `wiki/index.md` 是首要导航页，`wiki/log.md` 是首要演化日志
+- `ask` 的普通结果归档到 `outputs/qa/`；只有"暂不适合直写 wiki"的结果才设 `promote_status: pending`
+- `wiki/index.md` 是首要导航页，`wiki/log.md` 是首要操作日志
 - `output` 产出归档到 `outputs/slides/`、`outputs/charts/` 等
 - `lint` 报告归档到 `outputs/health/`
 - RemNote 备份统一落到 `outputs/remnote/`
 - frontmatter 字段名保持稳定，不随意发明新字段
 - `ingested_by` 区分手动收录、lint 补值、批量导入
 - concept 的 `aliases` 用于语义合并时保留所有已知名称
+- raw 文件不可变：写入 `raw/{area}/` 后不再修改

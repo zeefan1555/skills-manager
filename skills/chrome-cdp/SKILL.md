@@ -1,80 +1,77 @@
-# Chrome CDP 直连
+---
+name: chrome-cdp
+description: Interact with local Chrome browser session (only on explicit user approval after being asked to inspect, debug, or interact with a page open in Chrome)
+---
 
-通过 Chrome DevTools Protocol 直接连接本地 Chrome 浏览器，读取页面内容。保留完整登录态，无需 MCP。
+# Chrome CDP
 
-## 前置条件
+Lightweight Chrome DevTools Protocol CLI. Connects directly via WebSocket — no Puppeteer, works with 100+ tabs, instant connection.
 
-Chrome 必须以远程调试模式运行（端口 9222）。如果未开启，用以下命令启动：
+## Prerequisites
 
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable
-```
+- Chrome (or Chromium, Brave, Edge, Vivaldi) with remote debugging enabled: open `chrome://inspect/#remote-debugging` and toggle the switch
+- Node.js 22+ (uses built-in WebSocket)
+- If your browser's `DevToolsActivePort` is in a non-standard location, set `CDP_PORT_FILE` to its full path
 
-或者在已运行的 Chrome 中：地址栏输入 `chrome://inspect/#remote-debugging`，勾选 "Allow remote debugging"。
+## Commands
 
-## 使用方式
+All commands use `scripts/cdp.mjs`. The `<target>` is a **unique** targetId prefix from `list`; copy the full prefix shown in the `list` output (for example `6BE827FA`). The CLI rejects ambiguous prefixes.
 
-### 1. 检查 Chrome 是否可连接
-
-```bash
-curl -s http://127.0.0.1:9222/json/version
-```
-
-如果返回 JSON 说明连接正常。如果失败，说明 Chrome 未开启远程调试。
-
-### 2. 列出所有标签页
+### List open pages
 
 ```bash
-curl -s http://127.0.0.1:9222/json/list | python3 -c "
-import json, sys
-tabs = json.load(sys.stdin)
-for i, t in enumerate(tabs):
-    if t.get('type') == 'page' and 'sw.js' not in t.get('url', '') and 'blob:' not in t.get('url', ''):
-        print(f'{i}: {t.get(\"title\",\"\")} | {t.get(\"url\",\"\")}')
-"
+scripts/cdp.mjs list
 ```
 
-### 3. 导航到指定 URL
-
-使用 `references/cdp.py navigate <url>` 在当前标签页导航，或打开新标签页。
-
-### 4. 提取页面文本内容
-
-使用 `references/cdp.py extract [url_keyword]` 提取指定标签页的文本内容。
-
-### 5. 截图（可选）
-
-使用 `references/cdp.py screenshot [url_keyword] [output_path]` 对页面截图。
-
-## 完整工具脚本
-
-所有操作通过 `references/cdp.py` 完成，支持以下子命令：
-
-| 子命令 | 说明 |
-|--------|------|
-| `check` | 检查 Chrome 连接状态 |
-| `tabs` | 列出所有标签页 |
-| `navigate <url>` | 导航到 URL（复用已有标签页或新建） |
-| `extract [url_keyword]` | 提取标签页文本（可按 URL 关键词匹配） |
-| `screenshot [url_keyword] [path]` | 截图保存为 PNG |
-
-### 典型流程
+### Take a screenshot
 
 ```bash
-# 1. 检查连接
-python3 /path/to/cdp.py check
-
-# 2. 导航到目标页面
-python3 /path/to/cdp.py navigate "https://x.com/some_user/status/123"
-
-# 3. 等待页面加载后提取内容
-sleep 3
-python3 /path/to/cdp.py extract x.com
+scripts/cdp.mjs shot <target> [file]    # default: screenshot-<target>.png in runtime dir
 ```
 
-## 注意事项
+Captures the **viewport only**. Scroll first with `eval` if you need content below the fold. Output includes the page's DPR and coordinate conversion hint (see **Coordinates** below).
 
-- CDP 直连会访问 Chrome 的完整登录态（Cookie、Session），这是优势也是风险
-- 操作浏览器时不要手动点击页面，避免干扰
-- 默认端口 9222，如果冲突可以改为其他端口
-- 需要 Python 3 和 `websockets` 库（`pip3 install websockets`）
+### Accessibility tree snapshot
+
+```bash
+scripts/cdp.mjs snap <target>
+```
+
+### Evaluate JavaScript
+
+```bash
+scripts/cdp.mjs eval <target> <expr>
+```
+
+> **Watch out:** avoid index-based selection (`querySelectorAll(...)[i]`) across multiple `eval` calls when the DOM can change between them (e.g. after clicking Ignore, card indices shift). Collect all data in one `eval` or use stable selectors.
+
+### Other commands
+
+```bash
+scripts/cdp.mjs html    <target> [selector]   # full page or element HTML
+scripts/cdp.mjs nav     <target> <url>         # navigate and wait for load
+scripts/cdp.mjs net     <target>               # resource timing entries
+scripts/cdp.mjs click   <target> <selector>    # click element by CSS selector
+scripts/cdp.mjs clickxy <target> <x> <y>       # click at CSS pixel coords
+scripts/cdp.mjs type    <target> <text>         # Input.insertText at current focus; works in cross-origin iframes unlike eval
+scripts/cdp.mjs loadall <target> <selector> [ms]  # click "load more" until gone (default 1500ms between clicks)
+scripts/cdp.mjs evalraw <target> <method> [json]  # raw CDP command passthrough
+scripts/cdp.mjs open    [url]                  # open new tab (each triggers Allow prompt)
+scripts/cdp.mjs stop    [target]               # stop daemon(s)
+```
+
+## Coordinates
+
+`shot` saves an image at native resolution: image pixels = CSS pixels × DPR. CDP Input events (`clickxy` etc.) take **CSS pixels**.
+
+```
+CSS px = screenshot image px / DPR
+```
+
+`shot` prints the DPR for the current page. Typical Retina (DPR=2): divide screenshot coords by 2.
+
+## Tips
+
+- Prefer `snap --compact` over `html` for page structure.
+- Use `type` (not eval) to enter text in cross-origin iframes — `click`/`clickxy` to focus first, then `type`.
+- Chrome shows an "Allow debugging" modal once per tab on first access. A background daemon keeps the session alive so subsequent commands need no further approval. Daemons auto-exit after 20 minutes of inactivity.

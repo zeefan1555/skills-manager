@@ -1,6 +1,6 @@
 ---
 name: obsidian-tools
-description: "Unified agent guide for Obsidian knowledge base workflows. Use when the task involves saving source material (raw), compiling pending notes into wiki (compile), searching the vault (search), asking questions against the wiki (query), rendering visual outputs like slides or charts (output), running health checks (lint), checking vault status (status), or any Obsidian CLI / Markdown / Bases operation. Routes by explicit command or semantic intent; commands live in commands/, shared specs live in references/."
+description: "Unified agent guide for Obsidian knowledge base workflows. Use when the task involves saving source material (raw), compiling pending notes into wiki (compile), asking questions or searching the vault (ask), rendering visual outputs like slides or charts (output), running health checks (lint), checking vault status (status), or any Obsidian CLI / Markdown / Bases operation. Routes by explicit command or semantic intent; commands live in commands/, shared specs live in references/."
 ---
 
 # Obsidian Tools — 统一入口
@@ -14,28 +14,31 @@ obsidian-tools/
 ├── SKILL.md                ← 你在这里：统一入口 + 路由
 ├── commands/               ← 命令型文档（每个对应一个用户可触发的操作）
 │   ├── raw.md              ← 收录原始内容
-│   ├── compile.md          ← 编译 pending → wiki
-│   ├── search.md           ← 搜索知识库
-│   ├── query.md            ← 基于 wiki 问答
+│   ├── compile.md          ← 增量编译 → wiki
+│   ├── ask.md              ← 搜索 + 问答（统一入口）
 │   ├── output.md           ← 多格式可视化输出
 │   ├── lint.md             ← 健康检查 + 补值
 │   └── status.md           ← 知识库状态概览
 └── references/             ← 参考型文档（公共规范，被 commands/ 引用）
-    ├── note-format.md      ← 笔记格式、frontmatter、目录结构、状态机
+    ├── note-format.md      ← 笔记格式、frontmatter、目录结构
     ├── obsidian-cli.md     ← Obsidian CLI 命令参考
     ├── markdown.md         ← Obsidian Markdown 语法
+    ├── feishu-docx.md      ← 飞书文档抓取工具
+    ├── raw.md              ← raw 命令简版参考
     └── bases.md            ← Obsidian Bases (.base 文件)
 
 vault/
-├── raw/                    ← 原始来源，不改写
+├── _inbox/                 ← Web Clipper / 外部工具落地区
+├── raw/                    ← 原始来源（按 area 分子目录），不可变
 ├── wiki/
 │   ├── index.md            ← 人类 + LLM 共用的首页导航
-│   ├── log.md              ← ingest / query / lint / compile 演化日志
+│   ├── log.md              ← 统一操作日志（ingest / compile / ask / lint 等）
 │   ├── summaries/          ← 单来源摘要页（source notes）
 │   ├── concepts/           ← 跨来源概念页
 │   ├── topics/             ← 主题聚合页
 │   ├── syntheses/          ← 高价值问答 / 比较 / 综合页
 │   └── indexes/            ← 机器友好索引与台账
+├── outputs/                ← 产出归档
 ```
 
 **加载规则**：
@@ -52,9 +55,8 @@ vault/
 | 意图 | 命令 | 文件 |
 |---|---|---|
 | 存文章/链接/PDF/Git repo/批量导入 | `raw` | `commands/raw.md` |
-| 编译 pending 为 wiki | `compile` | `commands/compile.md` |
-| 搜索知识库 | `search` | `commands/search.md` |
-| 基于 wiki 复杂问答 | `query` | `commands/query.md` |
+| 编译未处理的 raw 为 wiki | `compile` | `commands/compile.md` |
+| 搜索知识库 / 基于 wiki 问答 | `ask` | `commands/ask.md` |
 | 生成幻灯片/图表/canvas | `output` | `commands/output.md` |
 | 健康检查/补值/趋势对比 | `lint` | `commands/lint.md` |
 | 查看知识库状态 | `status` | `commands/status.md` |
@@ -78,17 +80,19 @@ ls "${OBSIDIAN_ROOT}/raw" "${OBSIDIAN_ROOT}/wiki" 2>/dev/null
 
 ## 工作原则
 
-1. **优先用 Obsidian CLI**，默认优先级 `CLI > rg/find > 直接文件操作`。只有 CLI 不适合时（批量扫描、超长文本落盘）才退回。
+1. **工具选择按操作类型**：`写文件/创建 → Unix 命令 (mkdir, cat, mv) | 搜索/属性/反向链接 → Obsidian CLI | 批量文本扫描 → rg/find`。不强制统一用 CLI，按场景选最合适的。
 2. **Wiki-first**：真正要持续维护的是 `wiki/`，不是临时回答。高价值知识优先沉淀为 `summary / concept / topic / synthesis` 页面。
 3. **LLM 写、人不碰**：wiki 的主体由 LLM 编写和维护；原始材料保持可溯源，结构化页面负责吸收与演化。
-4. **页面演化优先于命令完成**：完成某个命令不是终点；关键是判断哪些页面因此受影响，并及时更新它们。
-5. **自主深入**：遇到复杂问题时，不要只做一轮查找就结束。像研究员一样：读 → 发现线索 → 追踪 → 再读 → 直到充分回答。
-6. **反哺闭环**：每次 query / lint / search / output 产生的高价值结果，都优先考虑直接更新 wiki，而不是只停留在 `outputs/`。
-7. **首页与演化日志并重**：`wiki/index.md` 是导航入口，`wiki/log.md` 是时间序列上下文；二者都要持续维护。
-8. **命名面向人类检索**：标题与文件名优先用用户的工作语言；中文工作流默认使用中文标题，避免只留下英文 slug。
-9. **问题型产物保留原问题**：`query` 落到 `outputs/qa/` 时，默认用用户原问题作为标题和文件名，便于日后按问题检索。
-10. 不确定命令参数时先看帮助，不要猜：`obsidian help` / `obsidian <command> --help`。
-11. 回复用户时做摘要——返回关键信息和下一步建议，不要整段输出原始内容。
+4. **Raw 不可变**：raw 文件一旦写入 `raw/{area}/` 就不再修改。编译状态通过 `wiki/log.md` 跟踪，不回写 raw。
+5. **页面演化优先于命令完成**：完成某个命令不是终点；关键是判断哪些页面因此受影响，并及时更新它们。
+6. **自主深入**：遇到复杂问题时，不要只做一轮查找就结束。像研究员一样：读 → 发现线索 → 追踪 → 再读 → 直到充分回答。
+7. **反哺闭环**：每次 ask / lint / output 产生的高价值结果，都优先考虑直接更新 wiki，而不是只停留在 `outputs/`。
+8. **统一日志**：所有操作日志写入 `wiki/log.md`，不使用 `_kb_meta/`。
+9. **首页与日志并重**：`wiki/index.md` 是导航入口，`wiki/log.md` 是时间序列上下文；二者都要持续维护。
+10. **命名面向人类检索**：标题与文件名优先用用户的工作语言；中文工作流默认使用中文标题。
+11. **问题型产物保留原问题**：`ask` 落到 `outputs/qa/` 时，默认用用户原问题作为标题和文件名。
+12. 不确定命令参数时先看帮助：`obsidian help` / `obsidian <command> --help`。
+13. 回复用户时做摘要——返回关键信息和下一步建议，不要整段输出原始内容。
 
 ## 错误处理
 
@@ -104,7 +108,7 @@ ls "${OBSIDIAN_ROOT}/raw" "${OBSIDIAN_ROOT}/wiki" 2>/dev/null
 ```text
                     ┌─── web search 补值 ───┐
                     │                       ↓
-raw → compile → wiki pages → query / output / lint
+raw → compile → wiki pages → ask / output / lint
        ↑           │              │
        │           │              ↓
        │           │        synthesis/topic updates
@@ -117,32 +121,28 @@ raw → compile → wiki pages → query / output / lint
 
 | 阶段 | 命令 | 作用 | 输入 | 输出 |
 |---|---|---|---|---|
-| **收录** | `raw` | 低摩擦入库，只补 frontmatter | URL / 文本 / PDF / repo / 批量 | `raw/{area}/*.md` (status: pending) + `wiki/log.md` |
-| **编译** | `compile` | 增量编译 + 受影响页面更新 | `raw/` 中 pending 笔记 / 待 promote 内容 | `wiki/summaries/` + `wiki/concepts/` + `wiki/topics/` + `wiki/syntheses/` + `wiki/index.md` + `wiki/log.md` |
-| **搜索** | `search` | CLI 粗筛 + LLM 精排 | 用户查询 | search_hits 累计，≥2 晋升 RemNote |
-| **问答** | `query` | 多轮自主研究 + 直接产出综合页 | 用户问题 | 结构化回答 + `wiki/syntheses/` 或 `outputs/qa/` |
+| **收录** | `raw` | 低摩擦入库 + 预消化 summary | URL / 文本 / PDF / repo / 批量 | `raw/{area}/*.md`（含 summary）+ `wiki/log.md` |
+| **编译** | `compile` | 增量编译（只读 summary）+ 受影响页面更新 | `raw/` 中未编译笔记 / 待 promote 内容 | `wiki/summaries/` + `wiki/concepts/` + `wiki/topics/` + `wiki/syntheses/` + `wiki/index.md` + `wiki/log.md` |
+| **问答/搜索** | `ask` | shallow 搜索 + deep 推理，统一入口 | 用户查询/问题 | 结构化回答 + `wiki/syntheses/` 或 `outputs/qa/` |
 | **输出** | `output` | 多格式可视化 | wiki 内容 + 用户指令 | `outputs/slides/` / `outputs/charts/` / `.canvas` |
-| **健检** | `lint` | 4 维检查 + web search 补值 | wiki 全量 | `outputs/health/` 报告 |
+| **健检** | `lint` | 5 维检查 + web search 补值 | wiki 全量 | `outputs/health/` 报告 |
 | **状态** | `status` | 只读快照 + 增长趋势 | vault 元数据 | 终端输出 |
 | **反哺** | `compile --promote` | 提取 QA / lint / output 发现入 wiki | `outputs/qa/` 等候提升内容 | 新/更新的 syntheses + topics + concepts |
 
 ### 数据流向
 
 ```text
-外部世界 ──→ raw/ ──→ wiki/
-                       │  ├── summaries/
-                       │  ├── concepts/
-                       │  ├── topics/
-                       │  ├── syntheses/
-                       │  ├── index.md
-                       │  └── log.md
-                       ↓
-                    outputs/
+外部世界 ──→ _inbox/ ──(raw --triage)──→ raw/{area}/
+               │                            │
+用户主动收录 ──(raw)──→ raw/{area}/ ──→ compile ──→ wiki/
+                                                     │
+                                                  outputs/
 ```
 
-- **raw → wiki**：由 `compile` 驱动，先生成 source summary，再更新受影响页面
-- **wiki → outputs**：由 `query` / `output` / `lint` 驱动，输出只是表达层，不是知识主体
-- **outputs → wiki**：由 `compile --promote` 或 `query` 直写 synthesis 驱动（反哺闭环）
+- **raw → wiki**：由 `compile` 驱动，读取 raw 的 summary + tags 做增量编译
+- **wiki → outputs**：由 `ask` / `output` / `lint` 驱动
+- **outputs → wiki**：由 `compile --promote` 或 `ask` 直写 synthesis 驱动（反哺闭环）
+- **_inbox → raw**：由 `raw --triage` 驱动，处理 Web Clipper 等外部落地文件
 
 ## 命令路由
 
@@ -152,8 +152,7 @@ raw → compile → wiki pages → query / output / lint
 |---|---|
 | `raw <url\|文本\|文件>` | `commands/raw.md` |
 | `compile` / `编译` / `整理` | `commands/compile.md` |
-| `search <query>` / `搜 xxx` | `commands/search.md` |
-| `query <question>` / `问 xxx` | `commands/query.md` |
+| `ask <question>` / `搜 xxx` / `问 xxx` / `query` / `search` | `commands/ask.md` |
 | `output` / `render` / `生成幻灯片` | `commands/output.md` |
 | `lint` / `health` / `检查` | `commands/lint.md` |
 | `status` / `概览` | `commands/status.md` |
@@ -167,8 +166,7 @@ raw → compile → wiki pages → query / output / lint
 |---|---|
 | "把这篇存到知识库" | `raw` |
 | "帮我编译一下" | `compile` |
-| "搜一下 xxx" | `search` |
-| "xxx 是什么？"（wiki 能回答的问题） | `query` |
+| "搜一下 xxx" / "xxx 是什么？" | `ask` |
 | "做个幻灯片" / "画个对比图" | `output` |
 | "知识库有什么问题吗" | `lint` |
 | "现在知识库什么情况" | `status` |
@@ -181,14 +179,15 @@ raw → compile → wiki pages → query / output / lint
 
 | 触发条件 | 自动编排 |
 |---|---|
-| `raw` 完成且当前 pending ≤ 5 | 提示用户是否立刻 `compile` |
-| `raw` 完成且当前 pending > 5 | 自动建议 `compile --batch` |
-| `raw` 完成且能推断受影响 topic/concept | 提示用户优先定向 `compile`，更新相关页面而非只看 pending 数 |
-| `query` 发现知识缺口 | 建议 `raw <补充来源>` → `compile` |
-| `query` 输出高价值且跨 2 个以上页面 | 优先写入 `wiki/syntheses/`，再按需回写 concept/topic |
-| `lint` 发现 missing data | 建议 `lint --impute`（web search 补值 → raw → compile） |
-| `lint` 发现结论失效或证据漂移 | 建议定向 `compile` 更新受影响 summary/concept/topic/synthesis |
-| `lint` 发现 pending 积压 | 自动建议 `compile` |
+| `raw` 完成且当前未编译 ≤ 5 | 提示用户是否立刻 `compile` |
+| `raw` 完成且当前未编译 > 5 | 自动建议 `compile --batch` |
+| `raw` 完成且能推断受影响 topic/concept | 提示用户优先定向 `compile` |
+| `ask` 发现知识缺口 | 建议 `raw <补充来源>` → `compile` |
+| `ask` 输出高价值且跨 2 个以上页面 | 优先写入 `wiki/syntheses/` |
+| `lint` 发现 missing data | 建议 `lint --impute` |
+| `lint` 发现结论失效或证据漂移 | 建议定向 `compile` 更新受影响页面 |
+| `lint` 发现未编译积压 | 自动建议 `compile` |
+| `_inbox/` 中有文件 | 提示 `raw --triage` 处理 |
 | 首次使用 / 新会话 | 建议先 `status` 了解当前状态 |
 
 ## 给 agent 的建议执行顺序
@@ -205,7 +204,7 @@ raw → compile → wiki pages → query / output / lint
 
 - Vault 根目录：`/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent`
   - 环境变量：`OBSIDIAN_ROOT` 指向此路径
-- Obsidian CLI 可用（Obsidian 需运行中），并优先使用 `obsidian` CLI
+- Obsidian CLI 可用（Obsidian 需运行中），并按操作类型选择工具
 - RemNote 输出依赖 `remnote-cli`
 - 可视化输出依赖 `marp-cli`（slides）、`python3 + matplotlib`（charts）
 
@@ -215,8 +214,9 @@ raw → compile → wiki pages → query / output / lint
 
 | 参考文件 | 定义内容 | 被引用于 |
 |---|---|---|
-| `references/note-format.md` | Vault 目录、所有笔记格式、frontmatter 字段、promote 状态机 | 所有命令 |
-| `references/obsidian-cli.md` | CLI 语法、常用命令、参数约定 | raw、compile、search、query、lint、status |
-| `references/markdown.md` | Obsidian Markdown 语法（wikilinks、callouts、frontmatter） | raw、compile、query、output |
+| `references/note-format.md` | Vault 目录、所有笔记格式、frontmatter 字段、promote 状态机、Area 管理 | 所有命令 |
+| `references/obsidian-cli.md` | CLI 语法、常用命令、参数约定、何时用 CLI vs Unix 命令 | raw、compile、ask、lint、status |
+| `references/markdown.md` | Obsidian Markdown 语法（wikilinks、callouts、frontmatter） | raw、compile、ask、output |
+| `references/feishu-docx.md` | 飞书文档抓取工具用法 | raw（URL 路由） |
 | `references/bases.md` | .base 文件语法（filters、formulas、views） | 独立使用 |
-| `../remnote-card-designer/SKILL.md` | RemNote 卡片设计约定 | search（晋升时调用） |
+| `../remnote-card-designer/SKILL.md` | RemNote 卡片设计约定 | ask（晋升时调用） |

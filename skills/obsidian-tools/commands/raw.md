@@ -1,6 +1,6 @@
 # Raw Command
 
-> **引用规范**：`references/note-format.md`（Raw 笔记格式、Vault 目录）、`references/obsidian-cli.md`（CLI 语法）、`references/markdown.md`（正文格式）
+> **引用规范**：`references/note-format.md`（Raw 笔记格式、Vault 目录、Area 管理）、`references/obsidian-cli.md`（CLI 语法）、`references/markdown.md`（正文格式）
 
 ## Trigger
 
@@ -12,7 +12,7 @@
 
 | 形式 | 示例 | 处理方式 |
 |---|---|---|
-| URL | `raw https://example.com/article` | 抓取正文（Web Clipper 格式优先，或 defuddle / readability） |
+| URL | `raw https://example.com/article` | 按 URL 路由表抓取正文 |
 | 文本 | `raw <一段文本>` | 直接入库 |
 | 本地文件 | `raw /path/to/file.md` | 读取文件内容 |
 | PDF | `raw /path/to/paper.pdf` | 提取文本（`pdftotext` 或 python `pymupdf`），保留结构 |
@@ -20,9 +20,22 @@
 | 批量 | `raw /path/to/folder/` 或 `raw <url1> <url2> ...` | 逐个入库，每个生成独立 raw 笔记 |
 | Tweet/Thread | `raw https://x.com/user/status/...` | 提取完整 thread 文本 + 图片 |
 
+## URL 抓取路由表
+
+根据 URL 模式选择抓取工具，确保最佳抓取质量：
+
+| URL 模式 | 抓取工具 | 说明 |
+|----------|----------|------|
+| `*.larkoffice.com/*`, `*.feishu.cn/*` | feishu-docx CLI | 见 `references/feishu-docx.md` |
+| `*.bytedance.net/*`（内网） | bytedcli-tools | 字节内部工具链 |
+| `twitter.com/*`, `x.com/*` | 现有 tweet 抓取逻辑 | 保留线程结构 |
+| 其他所有 URL | **TBD** | 暂不支持自动抓取，提示用户手动提供内容 |
+
+> 通用网页抓取能力暂不实现。遇到路由表未覆盖的 URL 时，提示用户手动粘贴网页内容或后续引入通用抓取技能。
+
 ## 目标
 
-把原始内容保存到 `raw/{area}/`，只补齐必要 frontmatter，不直接写知识结论。
+把原始内容保存到 `raw/{area}/`，补齐 frontmatter 并生成 summary，不直接写知识结论。
 
 低摩擦入库 —— 成功落盘是第一优先级。
 
@@ -30,30 +43,58 @@
 
 1. 识别输入类型（见上表）
 2. 提取内容
-   - URL：抓取正文（Obsidian Web Clipper 格式优先，或 defuddle / readability）
+   - URL：按路由表选择工具抓取正文
    - PDF：`pdftotext` 或 `python3 -c "import fitz; ..."`，保留标题/章节结构
    - Git repo：`git clone --depth 1`，提取 README、核心入口文件、package.json/go.mod 等
    - 批量：逐个处理，失败的跳过并汇总报告
-3. 判断领域归属，确定 `raw/{area}/`
-4. 生成 raw frontmatter（格式见 `references/note-format.md` → Raw 笔记格式）
-5. 多媒体处理
+3. **Area 归类**
+   - LLM 分析内容语义，匹配 `raw/` 下已有的 area 文件夹
+   - 如果现有 area 都不合适，创建新 area 文件夹（命名规则见 `references/note-format.md` → Area 管理）
+4. **生成 summary**（3-5 句）
+   - 必须覆盖每个 tag 对应的核心观点
+   - 写入 frontmatter 的 `summary:` 字段
+5. 生成完整 frontmatter（格式见 `references/note-format.md` → Raw 笔记格式）
+6. 多媒体处理
    - 图片：下载到 `raw/{area}/assets/` 并用相对路径引用
    - PDF 内嵌图片：如有重要图表，提取到 `assets/`
    - Repo：不复制整个 repo，只保留提取的摘要文件
-6. 保存到 `raw/`（使用 `obsidian create` 或直接文件写入，见 `references/obsidian-cli.md`）
-7. 去重检查
-   - 按 `source_url` 查找已有笔记
+7. **直接写入 `raw/{area}/`**
+   - 使用 Unix 命令：`mkdir -p raw/{area}` + `cat > raw/{area}/{filename}.md`
+   - 也可使用 `obsidian create`（见 `references/obsidian-cli.md`），但 Unix 命令更通用
+   - **文件直接写入最终位置，不经过 _inbox/**
+8. 去重检查
+   - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/`）
    - 重复时提示用户：覆盖 / 重命名 / 跳过
-8. 记录 ingest 活动
-   - append 到 `_kb_meta/ingest_log.md`
-   - append 到 `wiki/log.md`（仅一句摘要 + 触达路径）
-9. 返回给用户
-   - 保存路径
-   - area
-   - `status: pending`
-   - 当前 pending 总数
-   - 推断可能受影响的页面类型（如 topic / concept）
-   - 智能编排建议（pending ≤ 5 → 是否立刻 compile？）
+9. 记录活动
+   - append 到 `wiki/log.md`，格式 `## [{date}] ingest | {title}`
+10. 返回给用户
+    - 保存路径
+    - area
+    - summary 摘要
+    - 当前未编译总数（通过对比 raw/ 文件与 wiki/log.md 编译记录）
+    - 推断可能受影响的页面类型（如 topic / concept）
+    - 智能编排建议（未编译 ≤ 5 → 是否立刻 compile？）
+
+## 不可变约束
+
+raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
+
+所有状态变更通过 `wiki/log.md` 的编译记录体现，不回写 raw 文件。
+
+## _inbox Triage 子流程
+
+raw 命令可处理 `_inbox/` 中已存在但缺少 frontmatter 的文件（如 Web Clipper 产物）：
+
+1. 列出 `_inbox/` 中所有 `.md` 文件
+2. 逐个读取内容
+3. 补全 frontmatter（title, source_type, tags, area, summary 等）
+4. 生成 summary
+5. 写入新文件到 `raw/{area}/{filename}.md`
+6. 成功后删除 `_inbox/{filename}.md`
+
+> **原子性保证**：采用"写新删旧"策略。先在 `raw/{area}/` 写入完整新文件，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/{area}/），要么失败（原文件仍在 _inbox/），不会出现半成品。
+
+触发方式：`raw --triage` 或当用户说"处理一下 inbox"时自动触发。
 
 ## 批量导入
 
@@ -74,14 +115,23 @@ Batch ingest: 5/6 succeeded, 1 failed
   ✓ raw/ml/attention-mechanism.md
   ✓ raw/ml/transformer-architecture.md
   ✗ https://broken-url.com — 404 Not Found
-Pending total: 12 → suggest `compile --batch`
+Uncompiled total: 12 → suggest `compile --batch`
 ```
+
+## 工具选择
+
+| 操作 | 推荐工具 | 理由 |
+|------|----------|------|
+| 创建/写入文件 | `mkdir -p` + `cat > file` | 不依赖 Obsidian 运行状态，更通用 |
+| 搜索已有笔记（去重） | `rg` 或 `obsidian search` | rg 更快，CLI 更精确 |
+| 读取 frontmatter | `obsidian read --properties` | 解析 YAML 更可靠 |
 
 ## 约束
 
-- `raw` 阶段不生成 `wiki/summaries` 或 `wiki/concepts`
+- `raw` 阶段生成 summary 写入 frontmatter，但不生成 `wiki/summaries` 或 `wiki/concepts`
 - `raw` 阶段不直接写 topic / synthesis 结论页
 - 目标是低摩擦入库，不追求一次整理到位
 - 如果用户只是"先存一下"，优先成功落盘
 - Git repo 不要 clone 完整历史，用 `--depth 1`
 - PDF 超过 50 页时只提取前 50 页 + 目录结构，提示用户是否继续
+- 日志只写 `wiki/log.md`，不写 `_kb_meta/`

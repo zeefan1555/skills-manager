@@ -106,3 +106,19 @@ obsidian dev:mobile on
 
 - `obsidian-tools` 默认优先使用这里列出的 CLI 能力
 - 批量扫描、重建索引、超长文本落盘时，才退回 `rg` / `find` / 直接文件操作
+
+## 何时用 CLI vs Unix 命令
+
+根据操作类型选择最合适的工具：
+
+| 操作类型 | 推荐工具 | 理由 |
+|----------|----------|------|
+| 创建/写入文件 | `mkdir -p` + `cat > file` | 不依赖 Obsidian 运行状态，更通用 |
+| 追加内容 | `cat >> file` 或 `echo >> file` | 同上 |
+| 搜索笔记内容 | `obsidian search` | 支持全文索引、模糊匹配 |
+| 查看笔记属性 | `obsidian read --properties` | 解析 frontmatter 更可靠 |
+| 查反向链接 | `obsidian backlinks` | 依赖 Obsidian 图谱索引 |
+| 移动/重命名 | `mv` | 简单直接；Obsidian 会自动检测文件变更 |
+| 批量扫描 | `find` + `rg` | 速度快、支持正则 |
+
+**原则**：写文件用 Unix 命令，搜索/属性用 Obsidian CLI，批量扫描用 rg/find。

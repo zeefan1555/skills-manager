@@ -14,7 +14,8 @@
 ## 执行步骤
 
 1. 统计各目录文件数（目录结构见 `references/note-format.md` → Vault 目录）
-   - `raw/`：总数、pending 数、compiled 数
+   - `raw/`：总数、未编译数（不在 wiki/log.md 编译记录中）
+   - `_inbox/` 积压：文件数量和最早文件日期
    - `wiki/summaries/`：总数
    - `wiki/concepts/`：总数
    - `wiki/topics/`：总数
@@ -27,21 +28,16 @@
    - 总词数估算：`find wiki/ -name "*.md" -exec wc -w {} + | tail -1`
    - 总文件数
 3. 读取最近活动
-   - `_kb_meta/ingest_log.md`：最近一次收录时间
-   - `_kb_meta/compile_log.md`：最近一次编译时间
-   - `_kb_meta/search_log.md`：最近一次搜索时间
-   - `_kb_meta/query_log.md`：最近一次问答时间
-   - `_kb_meta/lint_log.md`：最近一次 lint 时间
-   - `wiki/log.md`：最近 3 条知识演化记录
+   - 读取 `wiki/log.md` 中对应 action 类型的最近记录
    - 最近修改的 5 篇笔记
 4. 增长趋势（与上次 status 或 lint 对比）
-   - 如有 `_kb_meta/status_log.md`：对比 concept 数、summary 数、raw 数、词数
+   - 如有 `wiki/log.md` 中的历史 status 记录：对比 concept 数、summary 数、raw 数、词数
    - 如无历史数据：标注"首次统计"
 5. 健康快照
    - pending 积压数（及超 7 天的数量）
    - 断链数（快速抽样检查 10 条 wikilinks）
    - 最近 lint 报告摘要（如有）
-6. 保存本次统计到 `_kb_meta/status_log.md`（append 模式）
+6. append 到 `wiki/log.md`，格式 `## [{date}] status | vault snapshot`
 
 ## 返回格式
 
@@ -49,7 +45,8 @@
 📊 Knowledge Base Status
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scale:
-  Raw:        {total} ({pending} pending, {compiled} compiled)
+  Raw:        {total} ({uncompiled} uncompiled)
+  Inbox:      {n} files ({oldest_date})
   Summaries:  {n}
   Concepts:   {n}
   Topics:     {n}
@@ -94,4 +91,4 @@ Suggestions:
 - 如果状态显示积压，主动建议 `compile` 或 `lint`
 - 如果首页或演化日志长期未更新，主动建议刷新 `wiki/index.md` / `wiki/log.md`
 - 如果从未运行过 lint，建议首次 `lint`
-- 唯一写入：append 到 `_kb_meta/status_log.md` 记录本次统计供下次对比
+- 唯一写入：append 到 `wiki/log.md` 记录本次统计供下次对比
