@@ -1,0 +1,10 @@
+import type { NextCode } from '@vecode-fe/nextbeaker-api';
+import type { Command } from 'commander';
+import type { CommandExecutor } from '../utils/cli-utils';
+export declare function createComment(nextcode: NextCode, commentableTypeInput: string | undefined, commentableIdInput: string | undefined, contentInput: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function getComment(nextcode: NextCode, commentId: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function listCommentThreads(nextcode: NextCode, commentableTypeInput: string | undefined, commentableIdInput: string | undefined, commitIdInput?: string, repoPathInput?: string): Promise<unknown>;
+export declare function listCommentThreadsByMergeRequestUrl(nextcode: NextCode, mergeRequestUrlInput: string | undefined, commitIdInput?: string): Promise<unknown>;
+export declare function updateComment(nextcode: NextCode, commentId: string | undefined, contentInput: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function deleteComment(nextcode: NextCode, commentId: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function registerCommentCommands(program: Command, nextcode: NextCode, execute: CommandExecutor): void;

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Everything to Obsidian"
+  short_description: "抓取 URL 并写入 Obsidian 关联双笔记"
+  default_prompt: "Use $everything-to-obsidian to fetch this URL and save linked source and summary notes into my Obsidian vault."

@@ -1,0 +1,7 @@
+interface:
+  display_name: "RemNote Card Designer"
+  short_description: "Design interview-narrative flashcards from technical articles"
+  default_prompt: "Use $remnote-card-designer to turn this article into interview-ready flashcards: build a story card, deep-dive reasoning cards, and follow-up cards so I can explain the topic confidently in an interview. {input}"
+  model: "claude-sonnet-4-20250514"
+  temperature: 0.4
+  max_tokens: 8192

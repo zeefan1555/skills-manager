@@ -1,0 +1,12 @@
+{
+    "name": "@bytedance-dev/bytedcli-website",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "compile": "node -e \"require('fs').rmSync('.dist', { recursive: true, force: true })\" && tsc -p ./tsconfig.json --outDir ./.dist",
+        "build": "npm run compile && node ./.dist/src/build.js",
+        "deploy": "npm run build && NPM_CONFIG_REGISTRY=http://bnpm.byted.org npm exec -y @bytedance-dev/bytedcli@latest -- goofy preview deploy site --alias bytedcli --override",
+        "serve": "npm run compile && node ./.dist/src/server.js",
+        "test": "npm run compile && node --test ./.dist/test/site.test.js"
+    }
+}

@@ -1,0 +1,10 @@
+import type { NextCode } from '@vecode-fe/nextbeaker-api';
+import type { Command } from 'commander';
+import type { CommandExecutor } from '../utils/cli-utils';
+export declare function getLatestCheckRunLogByBranch(nextcode: NextCode, branchInput: string | undefined, pageSizeInput?: string, repoPathInput?: string): Promise<unknown>;
+export declare function getMergeRequestChecklistLogs(nextcode: NextCode, branchInput: string | undefined, pageSizeInput?: string, repoPathInput?: string, statusInput?: string): Promise<unknown>;
+export declare function createCheckRun(nextcode: NextCode, commitId: string | undefined, name: string | undefined, statusInput: string | undefined, conclusionInput?: string, repoPathInput?: string): Promise<unknown>;
+export declare function getCheckRun(nextcode: NextCode, checkRunId: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function updateCheckRun(nextcode: NextCode, checkRunId: string | undefined, status?: string, conclusion?: string, description?: string, text?: string, repoPathInput?: string): Promise<unknown>;
+export declare function listCheckRuns(nextcode: NextCode, commitId: string | undefined, pageNumberInput?: string, pageSizeInput?: string, repoPathInput?: string): Promise<unknown>;
+export declare function registerCheckRunCommands(program: Command, nextcode: NextCode, execute: CommandExecutor): void;

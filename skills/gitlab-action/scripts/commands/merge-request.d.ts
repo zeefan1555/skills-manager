@@ -1,0 +1,10 @@
+import type { NextCode } from '@vecode-fe/nextbeaker-api';
+import type { Command } from 'commander';
+import type { CommandExecutor } from '../utils/cli-utils';
+export declare function createMergeRequest(nextcode: NextCode, sourceBranch: string | undefined, targetBranch: string | undefined, title: string | undefined, description?: string, mergeMethodInput?: string, removeSourceBranchAfterMergeInput?: string, squashCommitsInput?: string, reviewerIdsInput?: string, sourceRepoPathInput?: string, targetRepoPathInput?: string): Promise<unknown>;
+export declare function getMergeRequest(nextcode: NextCode, mergeRequestId: string | undefined, withVersionInput?: string, repoPathInput?: string): Promise<unknown>;
+export declare function listMergeRequests(nextcode: NextCode, status?: string, pageNumberInput?: string, pageSizeInput?: string, targetRepoPathInput?: string): Promise<unknown>;
+export declare function updateMergeRequest(nextcode: NextCode, mergeRequestId: string | undefined, title?: string, description?: string, repoPathInput?: string): Promise<unknown>;
+export declare function mergeMergeRequest(nextcode: NextCode, mergeRequestId: string | undefined, mergeMethod?: string, removeSourceBranchAfterMergeInput?: string, squashCommitsInput?: string, mergeCommitMessage?: string, squashCommitMessage?: string, repoPathInput?: string): Promise<unknown>;
+export declare function closeMergeRequest(nextcode: NextCode, mergeRequestId: string | undefined, repoPathInput?: string): Promise<unknown>;
+export declare function registerMergeRequestCommands(program: Command, nextcode: NextCode, execute: CommandExecutor): void;

@@ -1,0 +1,20 @@
+version: 1
+web:
+  dir: .
+  runtime: worker
+  isCustomServer: false
+  ssr:
+    cwd: .
+    script: node worker-server/index.js
+    runtime: nodejs18
+    timeout: 3000
+routes:
+  - src: /SKILL.md
+    dest:
+      type: web
+      path: SKILL.md
+  - src: /**
+    dest:
+      type: web
+      path: html/main/index.html
+      ssr: true
