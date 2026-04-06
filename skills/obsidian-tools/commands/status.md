@@ -14,7 +14,8 @@
 ## 执行步骤
 
 1. 统计各目录文件数（目录结构见 `references/note-format.md` → Vault 目录）
-   - `raw/`：总数、待编译数（wiki/summaries/inbox/ 中的文件数）
+   - `raw/`：总数（inbox: {n}, 已编译: {n}）
+   - `raw/inbox/` 待编译数
    - `_inbox/` 积压：文件数量和最早文件日期
    - `wiki/summaries/`：总数
    - `wiki/summaries/inbox/`：待编译数量
@@ -25,7 +26,7 @@
    - `wiki/index.md`：是否存在、最近更新时间、覆盖的 concept 数
    - `wiki/log.md`：条目数、最近更新时间
    - `outputs/`：各子目录数（qa、health、remnote、slides、charts）
-   - `outputs/qa/` 中 `promote_status: pending` 的数量
+   - `outputs/qa/inbox/` 待反哺数
 2. 计算规模指标
    - 总词数估算：`find wiki/ -name "*.md" -exec wc -w {} + | tail -1`
    - 总文件数
@@ -36,12 +37,11 @@
    - 如有 `wiki/log.md` 中的历史 status 记录：对比 concept 数、summary 数、raw 数、词数
    - 如无历史数据：标注"首次统计"
 5. 健康快照
-   - pending 积压数（及超 7 天的数量）
-   - inbox 积压数（wiki/summaries/inbox/ 中的文件数）
+   - inbox 积压数（3 个 inbox 各自的文件数，及超 7 天的数量）
+   - `_inbox/` 积压数
    - 断链数（快速抽样检查 10 条 wikilinks）
    - 最近 lint 报告摘要（如有）
-   - pending promote 数量（`outputs/qa/` 中等待反哺的 QA）
-6. append 到 `wiki/log.md`，格式 `## [{date}] status | vault snapshot`
+6. append 到 `wiki/log.md`，格式 `[{date}] status | vault snapshot`
 
 ## 返回格式
 
@@ -49,7 +49,7 @@
 📊 Knowledge Base Status
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scale:
-  Raw:          {total} ({uncompiled} uncompiled)
+  Raw:          {total} (inbox: {n}, compiled: {n})
   Inbox:        {n} files ({oldest_date})
   Summaries:    {n} ({inbox} in inbox)
   Concepts:     {n}
@@ -60,8 +60,10 @@ Scale:
   Total words:  ~{n}K
   Outputs:      {n} (qa: {n}, health: {n}, remnote: {n}, slides: {n}, charts: {n})
 
-Pending Promote:
-  QA awaiting compile: {n}
+Inbox Pending:
+  raw/inbox/:              {n} files
+  wiki/summaries/inbox/:   {n} files
+  outputs/qa/inbox/:       {n} files
 
 Growth (vs last check on {date}):
   Raw:      +{n}
@@ -82,15 +84,15 @@ Recently Modified:
   2. ...
 
 Health:
-  ⚠ {n} raw pending > 7 days
+  ⚠ {n} raw in inbox pending > 7 days
   ⚠ {n} summaries in inbox backlog
+  ⚠ {n} QA in inbox pending feedback
   ⚠ {n} broken links (sampled)
   ⚠ {n} stale conclusions flagged by lint
-  ⚠ {n} QA pending promote
   ✓ Last lint: {n} issues ({date})
 
 Suggestions:
-  → Run `compile` to process {n} pending raw + {n} pending promote
+  → Run `compile` to process {n} inbox files (raw: {n}, summaries: {n}, qa: {n})
   → Run `lint` (last run > 7 days ago)
 ```
 

@@ -1,6 +1,6 @@
 # Ask Command
 
-> **引用规范**：`references/note-format.md`（4 层检索层级、QA Output 格式、promote 状态机）、`references/obsidian-cli.md`（search / backlinks）、`references/markdown.md`（正文格式）
+> **引用规范**：`references/note-format.md`（4 层检索层级、QA Output 格式）、`references/obsidian-cli.md`（search / backlinks）、`references/markdown.md`（正文格式）
 
 ## Trigger
 
@@ -87,7 +87,7 @@ Agent 根据问题复杂度自动从 shallow 升级到 deep：
 
 ### 归档判断标准
 
-| 条件 | 归档 | 反哺（promote） |
+| 条件 | 归档 | 反哺 |
 |---|---|---|
 | 回答涉及 ≥3 个 concepts 的交叉分析 | 是 | 直接写 `wiki/syntheses/` |
 | 回答揭示了 wiki 中没有的新知识点 | 是 | 直接写 `wiki/syntheses/` + 更新 concept/topic |
@@ -98,10 +98,10 @@ Agent 根据问题复杂度自动从 shallow 升级到 deep：
 ### 归档操作
 
 1. **高价值结果**：直接保存到 `wiki/syntheses/{slug}.md`
-2. **普通归档结果**：保存到 `outputs/qa/{YYYY-MM-DD}-{slug}.md`
-3. append 到 `wiki/log.md`，格式 `## [{date}] ask | {question}`
+2. **普通归档结果**：保存到 `outputs/qa/{slug}.md`
+3. append 到 `wiki/log.md`，格式 `[{date}] ask | {question}`
 4. 如是综合页，同时回写相关 concept / topic
-5. 如暂不适合直写 wiki：设 `promote_status: pending`，等 compile 自动扫描并提取
+5. 如暂不适合直写 wiki：保存到 `outputs/qa/inbox/{slug}.md`，compile 会自动扫描 inbox 并反哺
 
 ### 命名规范
 

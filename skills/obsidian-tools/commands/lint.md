@@ -24,7 +24,7 @@
 
 ### 1. 数据一致性
 - frontmatter 字段是否完整（对照 `references/note-format.md` 中的各格式定义）
-- wiki/summaries/ 根目录中的 Summary 是否都有对应的 raw
+- 已编译 raw（在 `raw/{area}/` 中）是否都有对应 summary（在 `wiki/summaries/` 中）
 - concept 的 `sources` 引用是否有效
 - 日期格式是否统一
 - Summary 的 `source` backlink 是否指向存在的 raw
@@ -38,7 +38,7 @@
 ### 3. 内容质量
 - 重复概念检测（按 Concept 合并规则的 3 条标准：名称匹配、定义重叠 >50%、aliases 包含）
 - 极短或空笔记（< 50 字的 concept / Summary）
-- 长期未编译的 Summary（在 wiki/summaries/inbox/ 中且 ingested > 7 天前）
+- `raw/inbox/` 中 ingested > 7 天的文件
 - concept 缺少 `sources` 引用
 - Summary 缺少关键结论
 - raw 的 `summary` 字段为空（应由 raw 命令生成）
@@ -51,7 +51,7 @@
 ### 5. 知识拓展候选
 - 分析现有 concepts 之间的关联，建议缺失的 `related` 链接
 - 基于 raw 内容建议新的 concept 候选
-- 发现值得深入研究的方向
+- 发现倾得深入研究的方向
 - **识别数据缺口**：哪些 concept 只有 1 个 source？哪些 area 覆盖薄弱？
 
 ### 6. 证据漂移 / 结论失效
@@ -61,10 +61,11 @@
 - 某个 concept 的 `conflicts` / `open_questions` 是否应该更新
 
 ### 7. 架构健康
+- inbox 积压检查：`raw/inbox/`、`wiki/summaries/inbox/`、`outputs/qa/inbox/` 文件数量
 - `_inbox/` 积压检查：文件数 > 0 则提示跑 `raw --triage`
 - area 文件夹只含 1 篇笔记的检查（可能过度细分）
-- wiki/summaries/inbox/ 积压数量告警
+- `raw/inbox/` 积压检查：文件数 > 0 则提示 compile
 - raw 的 tags 在 wiki 中没有对应条目（可能 Summary 遗漏了关键概念）
-- `outputs/qa/` 中 `promote_status: pending` 积压数量
+- `outputs/qa/inbox/` 积压数量
 
 ## 执行步骤 ... (rest of file)

@@ -20,29 +20,32 @@
 
 ```text
 {OBSIDIAN_ROOT}/
+├── _inbox/                 ← Web Clipper / 外部工具落地区（未经 raw 处理）
 ├── raw/                    ← L4 原始层（按 area 分子目录），不可变
+│   ├── inbox/              ← raw 命令写入，compile 处理后移到 {area}/
 │   └── {area}/
 │       └── assets/         ← 关联图片/附件
 ├── wiki/
-│   ├── index.md            ← L1 路由层：按 area 分组的概念目录（唯一索引）
-│   ├── log.md              ← 活动日志（时间序，grep 友好）
+│   ├── index.md            ← L1 路由层
+│   ├── log.md              ← 统一活动日志
 │   ├── glossary.md         ← 术语表
-│   ├── summaries/          ← L3 Summary：单来源详细分析
-│   │   └── inbox/          ← raw 产出的待编译 Summary（compile 扫描此目录）
-│   ├── concepts/           ← L2 概念层：跨来源概念（含实战笔记）
-│   ├── topics/             ← 主题聚合（同 area ≥3 concept 时创建）
+│   ├── summaries/          ← L3 来源层
+│   │   └── inbox/          ← raw 写入，compile 处理后移到根目录
+│   ├── concepts/           ← L2 概念层
+│   ├── topics/             ← 主题聚合
 │   └── syntheses/          ← 综合/比较/高价值问答
 ├── outputs/
-│   ├── qa/                 ← ask 命令的问答归档（pending 可 promote 入 wiki）
-│   ├── health/             ← lint 命令的健康报告
-│   ├── remnote/            ← RemNote 导出备份
-│   ├── slides/             ← Marp 幻灯片
-│   └── charts/             ← matplotlib 图表
+│   ├── qa/                 ← ask 命令的问答归档
+│   │   └── inbox/          ← 待反哺 QA，compile 处理后移到根目录
+│   ├── health/
+│   ├── remnote/
+│   ├── slides/
+│   └── charts/
 ```
 
 `{OBSIDIAN_ROOT}` = `/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent`
 
-> **编译状态由文件夹位置决定**：`wiki/summaries/inbox/` 中的 Summary 文档表示"待编译"，compile 完成后将其移到 `wiki/summaries/` 根目录表示"已编译"。无需通过 log 或其他字段判断编译状态。
+> **编译状态由文件夹位置决定**：`wiki/summaries/inbox/` 中的 Summary 文档表示"待编译"，compile 完成后将其移到 `wiki/summaries/` 根目录表示"已编译"。`raw/inbox/` 中的 raw 文件表示"待编译"，compile 处理后移到 `raw/{area}/`。`outputs/qa/inbox/` 中的 QA 表示"待反哺"，compile 处理后移到 `outputs/qa/` 根目录。无需通过 log 或其他字段判断编译状态。
 
 ## index.md 模板
 
@@ -108,13 +111,13 @@ summary: |
 
 > **文件名即 ID**：不再使用 uid 字段，markdown 文件名就是笔记的唯一标识。
 >
-> **不可变约束**：raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
+> **不可变约束**：raw 文件写入 `raw/inbox/`，compile 处理后移到 `raw/{area}/`。一旦移入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
 >
 > **已移除字段**：`uid`、`status`、`compiled_at` 不再使用。编译状态通过文件夹位置跟踪（见 Vault 目录说明）。
 
 ## Summary 笔记格式
 
-> raw 命令在收录时同步生成 Summary 文档到 `wiki/summaries/inbox/`，作为 L3 层的单来源分析页。
+> raw 命令在收录时同步生成 Summary 文档到 `wiki/summaries/inbox/`，作为 L3 层的单来源分析页。compile 处理后将 Summary 移到 `wiki/summaries/`。
 
 ```yaml
 ---
@@ -291,25 +294,14 @@ sources:
 knowledge_gaps:
   - "缺少 xxx 的详细数据"
 filed_back: true|false
-promote_status: none|pending|promoted
 tags:
   - qa
 ---
 ```
 
-> `outputs/qa/` 更适合临时归档、低价值问答或等待 promote 的内容；高价值结果优先写入 `wiki/syntheses/`。
-
-### promote_status 状态机
-
-```text
-none ──(归档判断为值得反哺)──→ pending ──(compile 扫描并提取)──→ promoted
-```
-
-- `none`：不需要反哺的普通 QA
-- `pending`：等待 compile 提取新知识入 wiki
-- `promoted`：已经 compile 入 wiki
-
-> compile 默认模式会自动扫描 `outputs/qa/` 中 `promote_status: pending` 的文件，无需单独 `--promote`。
+> 需要反哺的 QA 保存到 `outputs/qa/inbox/`，不需要反哺的保存到 `outputs/qa/` 根目录。文件夹位置即状态。
+>
+> `outputs/qa/` 更适合临时归档、低价值问答；高价值结果优先写入 `wiki/syntheses/`。
 
 ## Output 格式
 
@@ -359,27 +351,33 @@ remnote_backup: "[[outputs/remnote/2026-04-05-example-remnote]]"
 
 ## Wiki Log 格式
 
-`wiki/log.md` 是所有操作的活动日志，格式为 grep 友好的单行条目：
+`wiki/log.md` 是所有操作的统一活动日志。纯文本行（不使用 `##` 标题），每条记录使用 `[[wikilink]]` 包裹文件名，确保在 Obsidian 中可点击跳转：
 
-```markdown
-## [{YYYY-MM-DD HH:mm}] {action} | {title}
+```text
+[{YYYY-MM-DD HH:mm}] {action} | [[{文件名}]]
 ```
 
-其中 `action` 可选值：`ingest`、`compile`、`ask`、`lint`、`promote`、`output`
+其中：
+- `action` 可选值：`ingest`、`compile`、`ask`、`lint`、`promote`、`output`
+- `ingest` 链接到 raw 文件：`[[2026-04-06 tmux attach、switch-client 与嵌套会话]]`
+- `compile` 链接到 Summary 文件：`[[S-019-ai-近30天跨平台舆情观察]]`
+- `ask` 链接到产出文件：`[[如果我要做晋升答辩...]]`
+- 一次 compile 涉及多个文件时，空格分隔多个 wikilink
 
-> **wiki/log.md 是活动日志**，记录所有操作的时间序。编译状态由文件夹位置决定（`wiki/summaries/inbox/` = 未编译，`wiki/summaries/` 根目录 = 已编译），不再由 log 判断。
+> **wiki/log.md 是活动日志**，不是编译状态的 source of truth。编译状态由文件夹位置决定（`raw/inbox/` = 待编译 raw，`summaries/inbox/` = 待编译 summary，`outputs/qa/inbox/` = 待反哺 QA）。
 
 ## 关键约束
 
 - `raw` 阶段同时生成 Summary 文档到 `wiki/summaries/inbox/`（frontmatter 中仍保留 `summary` 字段，但编译流程依赖 Summary 文档而非该字段）
-- `compile` 通过扫描 `wiki/summaries/inbox/` 判断待编译列表（不再对比 log）
-- `compile` 完成后将 Summary 从 `inbox/` 移到 `wiki/summaries/` 根目录，表示已编译
+- `raw` 文件写入 `raw/inbox/`，compile 处理后移到 `raw/{area}/`
+- `compile` 通过扫描 3 个 inbox 文件夹判断待编译列表
+- `compile` 完成后将 Summary 从 `inbox/` 移到 `wiki/summaries/` 根目录，raw 从 `raw/inbox/` 移到 `raw/{area}/`，QA 从 `outputs/qa/inbox/` 移到 `outputs/qa/` 根目录
 - `wiki/log.md` 是活动日志，不是编译状态的 source of truth
-- `compile` 默认模式同时扫描待编译的 Summary **和** `outputs/qa/` 中 `promote_status: pending` 的文件
+- `compile` 默认模式扫描 `raw/inbox/`、`wiki/summaries/inbox/`、`outputs/qa/inbox/` 三个文件夹
 - `compile` 阶段优先更新受影响页面，不只是机械生成新文件
 - 高价值问答优先写入 `wiki/syntheses/`，而不是长期停留在 `outputs/qa/`
 - `search_hits` 只记在最终命中的主笔记上
-- `ask` 的普通结果归档到 `outputs/qa/`；只有"暂不适合直写 wiki"的结果才设 `promote_status: pending`
+- `ask` 的普通结果归档到 `outputs/qa/`；需要反哺的结果保存到 `outputs/qa/inbox/`
 - `wiki/index.md` 是唯一索引文件，也是首要导航页
 - `output` 产出归档到 `outputs/slides/`、`outputs/charts/` 等
 - `lint` 报告归档到 `outputs/health/`
@@ -387,5 +385,5 @@ remnote_backup: "[[outputs/remnote/2026-04-05-example-remnote]]"
 - frontmatter 字段名保持稳定，不随意发明新字段
 - `ingested_by` 区分手动收录、lint 补值、批量导入
 - concept 的 `aliases` 用于语义合并时保留所有已知名称；必须包含英文原名
-- raw 文件不可变：写入 `raw/{area}/` 后不再修改
+- raw 文件不可变：移入 `raw/{area}/` 后不再修改
 - concept `related:` 链接必须双向对称
