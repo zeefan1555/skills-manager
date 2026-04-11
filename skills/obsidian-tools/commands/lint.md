@@ -38,7 +38,7 @@
 ### 3. 内容质量
 - 重复概念检测（按 Concept 合并规则的 3 条标准：名称匹配、定义重叠 >50%、aliases 包含）
 - 极短或空笔记（< 50 字的 concept / Summary）
-- `raw/inbox/` 中 ingested > 7 天的文件
+- `raw/_inbox/` 中 ingested > 7 天的文件
 - concept 缺少 `sources` 引用
 - Summary 缺少关键结论
 - raw 的 `summary` 字段为空（应由 raw 命令生成）
@@ -61,11 +61,11 @@
 - 某个 concept 的 `conflicts` / `open_questions` 是否应该更新
 
 ### 7. 架构健康
-- inbox 积压检查：`raw/inbox/`、`wiki/summaries/inbox/`、`outputs/qa/inbox/` 文件数量
+- _inbox 积压检查：`raw/_inbox/`、`wiki/summaries/_inbox/`、`outputs/qa/_inbox/` 文件数量
 - `_inbox/` 积压检查：文件数 > 0 则提示跑 `raw --triage`
 - area 文件夹只含 1 篇笔记的检查（可能过度细分）
-- `raw/inbox/` 积压检查：文件数 > 0 则提示 compile
+- `raw/_inbox/` 积压检查：文件数 > 0 则提示 compile
 - raw 的 tags 在 wiki 中没有对应条目（可能 Summary 遗漏了关键概念）
-- `outputs/qa/inbox/` 积压数量
+- `outputs/qa/_inbox/` 积压数量
 
 ## 执行步骤 ... (rest of file)

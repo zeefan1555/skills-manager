@@ -44,20 +44,20 @@ obsidian-tools/
 vault/
 ├── _inbox/                 ← Web Clipper / 外部工具落地区
 ├── raw/                    ← L4 原始层
-│   ├── inbox/              ← raw 命令写入，compile 后移到 {area}/
+│   ├── _inbox/              ← raw 命令写入，compile 后移到 {area}/
 │   └── {area}/             ← 已编译的 raw（按 area 分子目录），不可变
 ├── wiki/
 │   ├── index.md
 │   ├── log.md
 │   ├── glossary.md
 │   ├── summaries/          ← L3 来源层
-│   │   └── inbox/          ← raw 写入，compile 后移到根目录
+│   │   └── _inbox/          ← raw 写入，compile 后移到根目录
 │   ├── concepts/
 │   ├── topics/
 │   └── syntheses/
 ├── outputs/
 │   ├── qa/
-│   │   └── inbox/          ← 待反哺 QA，compile 后移到根目录
+│   │   └── _inbox/          ← 待反哺 QA，compile 后移到根目录
 │   ...
 ```
 
@@ -106,10 +106,10 @@ ls "${OBSIDIAN_ROOT}/raw" "${OBSIDIAN_ROOT}/wiki" 2>/dev/null
 2. **工具选择按操作类型**：`写文件/创建 → Unix 命令 (mkdir, cat, mv) | 搜索/属性/反向链接 → Obsidian CLI | 批量文本扬描 → rg/find`。不强制统一用 CLI，按场景选最合适的。
 3. **Wiki-first**：真正覀持续维护的是 `wiki/`，不是临时回答。高价值知识优先沉淀为 `summary / concept / topic / synthesis` 页面。
 4. **LLM 写、人不碰**：wiki 的主体由 LLM 编写和维护；原始材料保持可溯源，结构化页面负责吸收与演化。
-5. **编译状态通过文件夹位置跟踪：3 个 inbox（`raw/inbox/`、`wiki/summaries/inbox/`、`outputs/qa/inbox/`）= 未编译/待处理，对应根目录 = 已编译/已处理。不回写 raw**。
+5. **编译状态通过文件夹位置跟踪：3 个 _inbox（`raw/_inbox/`、`wiki/summaries/_inbox/`、`outputs/qa/_inbox/`）= 未编译/待处理，对应根目录 = 已编译/已处理。不回写 raw**。
 6. **页面演化优先于命令完成**：完成某个命令不是终点；关键是判断哪些页面因此受影响，并及时更新它们。
 7. **自主深入**：遇到复杂问题时，不要只做一轮查找就结束。像研究员一样：读 → 发现线索 → 追踪 → 再读 → 直到充分回答。
-8. **反哹闭环**：每次 ask / lint / output 产生的高价值结果，都优先考虑直接更新 wiki，而不是只停留在 `outputs/`。需要反哺的 QA 保存到 `outputs/qa/inbox/`，compile 默认扫描所有 3 个 inbox 文件夹自动处理。
+8. **反哹闭环**：每次 ask / lint / output 产生的高价值结果，都优先考虑直接更新 wiki，而不是只停留在 `outputs/`。需要反哺的 QA 保存到 `outputs/qa/_inbox/`，compile 默认扫描所有 3 个 _inbox 文件夹自动处理。
 9. **统一日志**：所有操作日志写入 `wiki/log.md`，不使用 `_kb_meta/`。log 是活动日志（activity log），不用于跟踪编译状态。
 10. **唯一索引 + 操作日志并重**：`wiki/index.md` 是唯一的导航入口，`wiki/log.md` 是时间序列上下文；二者都要持续维护。
 11. **中文优先命名**：标题与文件名优先用中文；concept / topic 的英文名放到 aliases。
@@ -143,8 +143,8 @@ raw → compile → wiki pages → ask / output / lint
 
 | 阶段 | 命令 | 作用 | 输入 | 输出 |
 |---|---|---|---|---|
-| **收录** | `raw` | 低摩擦入库 + 预消化 summary | URL / 文本 / PDF / repo / 批量 | `raw/inbox/*.md` + `wiki/summaries/inbox/` + `wiki/log.md` |
-| **编译** | `compile` | 增量编译 + 受影响页面更新 + 待反哺 QA 处理 | 3 个 inbox 文件夹中的待编译文件 | `wiki/summaries/` + `wiki/concepts/`（含实战笔记）+ `wiki/topics/` + `wiki/syntheses/` + `wiki/index.md` + `wiki/log.md` |
+| **收录** | `raw` | 低摩擦入库 + 预消化 summary | URL / 文本 / PDF / repo / 批量 | `raw/_inbox/*.md` + `wiki/summaries/_inbox/` + `wiki/log.md` |
+| **编译** | `compile` | 增量编译 + 受影响页面更新 + 待反哺 QA 处理 | 3 个 _inbox 文件夹中的待编译文件 | `wiki/summaries/` + `wiki/concepts/`（含实战笔记）+ `wiki/topics/` + `wiki/syntheses/` + `wiki/index.md` + `wiki/log.md` |
 | **问答/搜索** | `ask` | shallow 搜索 + deep 推理，沶 4 层层级检索 | 用户查询/问题 | 结构化回答 + `wiki/syntheses/` 或 `outputs/qa/` |
 | **软出** | `output` | 多格式可视化 | wiki 内容 用户指令 | `outputs/slides/` / `outputs/charts/` / `.canvas` |
 | **健检** | `lint` | 6 维检查 + web search 补值 | wiki 全量 | `outputs/health/` 报告 |
@@ -153,11 +153,11 @@ raw → compile → wiki pages → ask / output / lint
 ### 数据流向
 
 ```text
-外部世界 ──→ _inbox/ ──(raw --triage)──→ raw/inbox/
+外部世界 ──→ _inbox/ ──(raw --triage)──→ raw/_inbox/
                │                            │
-用户主动收录 ──(raw)──→ raw/inbox/ + wiki/summaries/inbox/
+用户主动收录 ──(raw)──→ raw/_inbox/ + wiki/summaries/_inbox/
                               │
-                    compile 扫描 3 个 inbox
+                    compile 扫描 3 个 _inbox
                               │
                   ┌─────────┼─────────┐
                   ↓         ↓         ↓
@@ -167,9 +167,9 @@ raw → compile → wiki pages → ask / output / lint
                           wiki pages
 ```
 
-- **raw → wiki**：由 `compile` 驱动，扫描 `raw/inbox/`、`outputs/qa/inbox/` 三个 inbox 做增量编译
+- **raw → wiki**：由 `compile` 驱动，扫描 `raw/_inbox/`、`outputs/qa/_inbox/` 三个 _inbox 做增量编译
 - **wiki → outputs**：由 `ask` / `output` / `lint` 驱动
-- **outputs → wiki**：需要反哺的 QA 保存到 `outputs/qa/inbox/`，compile 扫描 inbox 自动处理（反哺闭环）
+- **outputs → wiki**：需要反哺的 QA 保存到 `outputs/qa/_inbox/`，compile 扫描 _inbox 自动处理（反哺闭环）
 - **_inbox → raw**：由 `raw --triage` 驱动，处理 Web Clipper 等外部落地文件
 
 ## 命令路由
@@ -226,7 +226,7 @@ raw → compile → wiki pages → ask / output / lint
 3. **加载参考**：命令文件中引用的 `references/` 按需加载。
 4. **执行命令**：按命令文件的步骤操作。
 5. **评估受影响页面**：这次操作影响哪些 `summary / concept / topic / synthesis / index.md / log`？
-6. **反馈闭环**：优先直写 wiki；若暂不适合直写，保存到 `outputs/qa/inbox/` 等待 compile 处理。
+6. **反馈闭环**：优先直写 wiki；若暂不适合直写，保存到 `outputs/qa/_inbox/` 等待 compile 处理。
 7. **摘要返回**：关键信息 + 下一步建议。
 
 ## 前置条件

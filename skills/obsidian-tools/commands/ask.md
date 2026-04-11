@@ -101,7 +101,7 @@ Agent 根据问题复杂度自动从 shallow 升级到 deep：
 2. **普通归档结果**：保存到 `outputs/qa/{slug}.md`
 3. append 到 `wiki/log.md`，格式 `[{date}] ask | {question}`
 4. 如是综合页，同时回写相关 concept / topic
-5. 如暂不适合直写 wiki：保存到 `outputs/qa/inbox/{slug}.md`，compile 会自动扫描 inbox 并反哺
+5. 如暂不适合直写 wiki：保存到 `outputs/qa/_inbox/{slug}.md`，compile 会自动扫描 _inbox 并反哺
 
 ### 命名规范
 
