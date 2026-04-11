@@ -5,7 +5,7 @@ description: "Unified agent guide for Obsidian knowledge base workflows. Use whe
 
 # Obsidian Tools — 统一入口
 
-给 Claude Code、Codex、Mira 等 agent 的 Obsidian 知识库操作入口。读完这个文件后，遇到知识库相关任务，优先使用 `obsidian-tools` 路由，而不是手写文件操作或拼临时脚本。
+给 agent 的 Obsidian 知识库操作入口。读完这个文件后，遇到知识库相关任务，优先使用 `obsidian-tools` 路由，而不是手写文件操作或拼临时脚本。
 
 ## 4 层检索层级
 
@@ -42,7 +42,7 @@ obsidian-tools/
     └── bases.md            ← Obsidian Bases (.base 文件)
 
 vault/
-├── _inbox/                 ← Web Clipper / 外部工具落地区
+├── _Project/               ← 正在工作的目录
 ├── raw/                    ← L4 原始层
 │   ├── _inbox/              ← raw 命令写入，compile 后移到 {area}/
 │   └── {area}/             ← 已编译的 raw（按 area 分子目录），不可变

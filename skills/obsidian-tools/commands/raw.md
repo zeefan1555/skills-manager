@@ -30,11 +30,11 @@
 | `*.bytedance.net/*`（内网） | bytedcli-tools | ~/.skills-manager/skills/bytedcli-tools/ |
 | 其他所有 URL | agent-reach | ~/.skills-manager/skills/agent-reach/ |
 
-> 通用网页抓取能力暂不实现。遇到路由表未覆盖的 URL 时，提示用户手动粘贴网页内容或后续引入通用抓取技能。
+
 
 ## 目标
 
-把原始内容保存到 `raw/inbox/`，补齐 frontmatter，生成 summary，并产出 Summary 文档到 `wiki/summaries/inbox/`。
+把原始内容保存到 `raw/{area}/`，补齐 frontmatter，生成 summary，并产出 Summary 文档到 `wiki/summaries/_inbox/`。
 
 低摩擦入库 —— 成功落盘是第一优先级。
 
@@ -54,55 +54,37 @@
    - 写入 frontmatter 的 `summary:` 字段
 5. 生成完整 frontmatter（格式见 `references/note-format.md` → Raw 笔记格式）
 6. 多媒体处理
-   - 图片：下载到 `raw/inbox/assets/` 并用相对路径引用
+   - 图片：下载到 `raw/{area}/assets/` 并用相对路径引用
    - PDF 内嵌图片：如有重要图表，提取到 `assets/`
    - Repo：不复制整个 repo，只保留提取的摘要文件
-7. **直接写入 `raw/inbox/`**
-   - 使用 Unix 命令：`cat > raw/inbox/{filename}.md`
+7. **直接写入 `raw/{area}/`**
+   - 使用 Unix 命令：`mkdir -p raw/{area}` + `cat > raw/{area}/{filename}.md`
    - 也可使用 `obsidian create`（见 `references/obsidian-cli.md`），但 Unix 命令更通用
-   - **文件直接写入 raw/inbox/，不经过 _inbox/**
-8. **生成 Summary 文档（L3 来源层）**
-   - 创建 `wiki/summaries/inbox/S-{编号}-{slug}.md`
-   - 格式遵循 `references/note-format.md` → Summary 格式，包含：
-     - 完整 frontmatter（title, source_type, tags, area, created 等）
-     - **原文要点**：从 raw 正文提炼的核心观点列表
-     - **关键结论**：最重要的 2-3 条 takeaway
-     - **Backlink**：指向对应 raw 文件 `[[raw/inbox/{filename}]]`
-   - 使用 Unix 命令：`mkdir -p wiki/summaries/inbox` + `cat > wiki/summaries/inbox/S-{编号}-{slug}.md`
-9. 去重检查
-   - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/inbox/ raw/*/`）
+   - **文件直接写入最终位置，不经过 _inbox/**
+8. 去重检查
+   - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/`）
    - 重复时提示用户：覆盖 / 重命名 / 跳过
 10. 记录活动
-    - append 到 `wiki/log.md`，格式 `[{date}] ingest | [[{raw文件名}]]`
+    - append 到 `wiki/log.md`，格式 `[{date}] ingest | {title}`
 11. 返回给用户
-    - 保存路径（raw/inbox/ 文件 + Summary 文档）
+    - 保存路径（raw 文件 + Summary 文档）
     - area
     - summary 摘要
-    - 当前未编译总数（`ls raw/inbox/ wiki/summaries/inbox/ | wc -l`）
+    - 当前未编译总数（`ls wiki/summaries/_inbox/ | wc -l`）
     - 推断可能受影响的页面类型（如 topic / concept）
     - 智能编排建议（未编译 ≤ 5 → 是否立刻 compile？）
 
 ## 不可变约束
 
-raw 文件一旦写入 `raw/inbox/`（后由 compile 移到 `raw/{area}/`），正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
+raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
 
-编译状态由文件夹位置体现（`wiki/summaries/inbox/` = 未编译，`wiki/summaries/` 根目录 = 已编译），不回写 raw 文件。
+编译状态由文件夹位置体现（`wiki/summaries/_inbox/` = 未编译，`wiki/summaries/` 根目录 = 已编译），不回写 raw 文件。
 
-## _inbox Triage 子流程
 
-raw 命令可处理 `_inbox/` 中已存在但缺少 frontmatter 的文件（如 Web Clipper 产物）：
 
-1. 列出 `_inbox/` 中所有 `.md` 文件
-2. 逐个读取内容
-3. 补全 frontmatter（title, source_type, tags, area, summary 等）
-4. 生成 summary
-5. 写入新文件到 `raw/inbox/{filename}.md`
-6. 生成 Summary 文档到 `wiki/summaries/inbox/S-{编号}-{slug}.md`
-7. 成功后删除 `_inbox/{filename}.md`
+> **原子性保证**：采用"写新删旧"策略。先在 `raw/{area}/` 写入完整新文件并生成 Summary 文档到 `wiki/summaries/_inbox/`，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/{area}/ + Summary 在 wiki/summaries/_inbox/），要么失败（原文件仍在 _inbox/），不会出现半成品。
 
-> **原子性保证**：采用"写新删旧"策略。先在 `raw/inbox/` 写入完整新文件并生成 Summary 文档到 `wiki/summaries/inbox/`，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/inbox/ + Summary 在 wiki/summaries/inbox/），要么失败（原文件仍在 _inbox/），不会出现半成品。
-
-触发方式：`raw --triage` 或当用户说"处理一下 inbox"时自动触发。
+触发方式：`raw --triage` 或当用户说"处理一下 _inbox"时自动触发。
 
 ## 批量导入
 
@@ -120,8 +102,8 @@ raw https://url1 https://url2 https://url3
 
 ```text
 Batch ingest: 5/6 succeeded, 1 failed
-  ✓ raw/inbox/attention-mechanism.md → wiki/summaries/inbox/S-042-attention-mechanism.md
-  ✓ raw/inbox/transformer-architecture.md → wiki/summaries/inbox/S-043-transformer-architecture.md
+  ✓ raw/ml/attention-mechanism.md
+  ✓ raw/ml/transformer-architecture.md
   ✗ https://broken-url.com — 404 Not Found
 Uncompiled total: 12 → suggest `compile --batch`
 ```
@@ -136,10 +118,10 @@ Uncompiled total: 12 → suggest `compile --batch`
 
 ## 约束
 
-- `raw` 阶段生成 Summary 到 `wiki/summaries/inbox/`，但不生成 `wiki/concepts`
+- `raw` 阶段生成 Summary 文档到 `wiki/summaries/_inbox/`，但不生成 `wiki/concepts`
 - `raw` 阶段不直接写 topic / synthesis 结论页
 - 目标是低摩擦入库，不追求一次整理到位
 - 如果用户只是"先存一下"，优先成功落盘
 - Git repo 不要 clone 完整历史，用 `--depth 1`
 - PDF 超过 50 页时只提取前 50 页 + 目录结构，提示用户是否继续
-- 日志只写 `wiki/log.md`，不写 `_kb_meta/`
+- 日志只写 `wiki/log.md`
