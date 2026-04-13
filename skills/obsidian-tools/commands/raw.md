@@ -54,13 +54,15 @@
    - 写入 frontmatter 的 `summary:` 字段
 5. 生成完整 frontmatter（格式见 `references/note-format.md` → Raw 笔记格式）
 6. 多媒体处理
-   - 图片：下载到 `raw/{area}/assets/` 并用相对路径引用
-   - PDF 内嵌图片：如有重要图表，提取到 `assets/`
+   - 图片：统一下载到 `raw/assets/`，避免每篇笔记各自维护附件目录
+   - Markdown/Obsidian 正文中的图片统一改写为 `raw/assets/...` 路径引用
+   - PDF 内嵌图片：如有重要图表，也提取到 `raw/assets/`
    - Repo：不复制整个 repo，只保留提取的摘要文件
 7. **直接写入 `raw/{area}/`**
    - 使用 Unix 命令：`mkdir -p raw/{area}` + `cat > raw/{area}/{filename}.md`
    - 也可使用 `obsidian create`（见 `references/obsidian-cli.md`），但 Unix 命令更通用
    - **文件直接写入最终位置，不经过 _inbox/**
+   - 附件文件名需要加前缀避免冲突，推荐：`{note-slug}--{asset-name}`
 8. 去重检查
    - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/`）
    - 重复时提示用户：覆盖 / 重命名 / 跳过

@@ -22,9 +22,9 @@
 {OBSIDIAN_ROOT}/
 ├── _inbox/                 ← Web Clipper / 外部工具落地区（未经 raw 处理）
 ├── raw/                    ← L4 原始层（按 area 分子目录），不可变
+│   ├── assets/             ← 所有 raw 笔记共用的图片/附件目录
 │   ├── _inbox/              ← raw 命令写入，compile 处理后移到 {area}/
 │   └── {area}/
-│       └── assets/         ← 关联图片/附件
 ├── wiki/
 │   ├── index.md            ← L1 路由层
 │   ├── log.md              ← 统一活动日志
@@ -109,6 +109,8 @@ summary: |
 ---
 ```
 
+> **附件约定**：所有 raw 笔记的图片与附件统一落到 `raw/assets/`，不要在 `raw/{area}/` 下再创建独立 `assets/` 子目录。正文统一引用 `raw/assets/...` 中的文件。
+>
 > **文件名即 ID**：不再使用 uid 字段，markdown 文件名就是笔记的唯一标识。
 >
 > **不可变约束**：raw 文件写入 `raw/_inbox/`，compile 处理后移到 `raw/{area}/`。一旦移入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。

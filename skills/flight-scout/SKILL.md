@@ -70,7 +70,7 @@ description: |
 
 - **单程整页抓取**：解决“某个单程结果页的全部航班怎么一次抓全”
 - **往返选去程后抓返程全集**：解决“先固定一个去程，再把它对应的全部返程组合抓全”
-- **往返第一页去程逐个迭代**：解决“第一页去程全部跑完，并且每轮都把进度写回主表和 state”
+- **往返第一页去程逐个迭代**：解决“第一页去程全部跑完，并且每轮都把进度写回主表和 state，同时复用同一个 session”
 
 后续更大的流程（例如所有去程逐个展开成 `N × N` 往返全集）应建立在这两个原子 SOP 之上。
 
@@ -199,6 +199,8 @@ description: |
 具体往返 SOP 见：`reference/ctrip-roundtrip-outbound-to-return-sop.md`
 
 如果用户要求“按 loop 逐步写文件、逐步读文件、每轮处理后返回上一页并持续更新 state”，则应切换到：`reference/ctrip-roundtrip-all-outbounds-iterative-sop.md`
+
+补充经验：这条 SOP 已验证可以在同一个 `playwright-cli` session 中连续处理多个去程；推荐做法是 `open` 一次后，每轮只 `goto` 回基础页，不要 `close` / `reopen`。
 
 强约束：
 - 只认携程官网实际结果页或详情弹层，不认搜索引擎摘要

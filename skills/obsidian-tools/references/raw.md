@@ -24,7 +24,7 @@
 
 ## 目标
 
-把原始内容保存到 `raw/{area}/`，补齐 frontmatter 并生成 summary，不做 wiki/concepts。
+把原始内容保存到 `raw/{area}/`，把图片/附件统一保存到 `raw/assets/`，补齐 frontmatter 并生成 summary，不做 wiki/concepts。
 
 ## 执行步骤
 
@@ -42,9 +42,10 @@
    - `area`
    - `tags`
    - `summary`
-5. 使用 Unix 命令写入 `raw/{area}/`
-6. 记录到 `wiki/log.md`
-7. 返回给用户
+5. 将图片/附件统一写入 `raw/assets/`
+6. 使用 Unix 命令写入 `raw/{area}/`
+7. 记录到 `wiki/log.md`
+8. 返回给用户
    - 保存路径
    - area
    - summary
