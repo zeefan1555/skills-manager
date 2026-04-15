@@ -34,9 +34,9 @@
 
 ## 目标
 
-把原始内容保存到 `raw/{area}/`，补齐 frontmatter，生成 summary，并产出 Summary 文档到 `wiki/summaries/_inbox/`。
+把原始内容保存到 `raw/_inbox/`，补齐 frontmatter（含简短 summary 字段供浏览），等待 compile 统一编译。
 
-低摩擦入库 —— 成功落盘是第一优先级。
+低摩擦入库 —— 成功落盘是第一优先级。raw 不生成 Summary 文档，Summary 统一由 compile Phase A 生成。
 
 ## 执行步骤
 
@@ -49,19 +49,18 @@
 3. **Area 归类**
    - LLM 分析内容语义，匹配 `raw/` 下已有的 area 文件夹
    - 如果现有 area 都不合适，创建新 area 文件夹（命名规则见 `references/note-format.md` → Area 管理）
-4. **生成 summary**（3-5 句）
+4. **生成 summary 字段**（3-5 句，写入 frontmatter 的 `summary:` 字段，供浏览和 compile 阶段参考）
    - 必须覆盖每个 tag 对应的核心观点
-   - 写入 frontmatter 的 `summary:` 字段
 5. 生成完整 frontmatter（格式见 `references/note-format.md` → Raw 笔记格式）
 6. 多媒体处理
    - 图片：统一下载到 `raw/assets/`，避免每篇笔记各自维护附件目录
    - Markdown/Obsidian 正文中的图片统一改写为 `raw/assets/...` 路径引用
    - PDF 内嵌图片：如有重要图表，也提取到 `raw/assets/`
    - Repo：不复制整个 repo，只保留提取的摘要文件
-7. **直接写入 `raw/{area}/`**
-   - 使用 Unix 命令：`mkdir -p raw/{area}` + `cat > raw/{area}/{filename}.md`
+7. **写入 `raw/_inbox/`**
+   - 使用 Unix 命令：`mkdir -p raw/_inbox` + `cat > raw/_inbox/{filename}.md`
    - 也可使用 `obsidian create`（见 `references/obsidian-cli.md`），但 Unix 命令更通用
-   - **文件直接写入最终位置，不经过 _inbox/**
+   - **文件写入 `raw/_inbox/`，等待 compile 移到 `raw/{area}/`**
    - 附件文件名需要加前缀避免冲突，推荐：`{note-slug}--{asset-name}`
 8. 去重检查
    - 按 `source_url` 查找已有笔记（`rg 'source_url: {url}' raw/`）
@@ -69,22 +68,22 @@
 10. 记录活动
     - append 到 `wiki/log.md`，格式 `[{date}] ingest | {title}`
 11. 返回给用户
-    - 保存路径（raw 文件 + Summary 文档）
-    - area
+    - 保存路径（`raw/_inbox/` 中的文件）
+    - area（LLM 推断的领域，写入 frontmatter，compile 阶段据此移到 `raw/{area}/`）
     - summary 摘要
-    - 当前未编译总数（`ls wiki/summaries/_inbox/ | wc -l`）
+    - 当前未编译总数（`ls raw/_inbox/ | wc -l`）
     - 推断可能受影响的页面类型（如 topic / concept）
     - 智能编排建议（未编译 ≤ 5 → 是否立刻 compile？）
 
 ## 不可变约束
 
-raw 文件一旦写入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
+raw 文件一旦被 compile 移入 `raw/{area}/`，正文和 frontmatter 均不可修改。如需修正，删除原文件重新收录。
 
-编译状态由文件夹位置体现（`wiki/summaries/_inbox/` = 未编译，`wiki/summaries/` 根目录 = 已编译），不回写 raw 文件。
+编译状态由文件夹位置体现（`raw/_inbox/` = 未编译，`raw/{area}/` = 已编译），不回写 raw 文件。
 
+## _inbox Triage（外部落地文件处理）
 
-
-> **原子性保证**：采用"写新删旧"策略。先在 `raw/{area}/` 写入完整新文件并生成 Summary 文档到 `wiki/summaries/_inbox/`，成功后才删除 `_inbox/` 中的原文件。这样要么成功（新文件在 raw/{area}/ + Summary 在 wiki/summaries/_inbox/），要么失败（原文件仍在 _inbox/），不会出现半成品。
+> **原子性保证**：采用"写新删旧"策略。先在 `raw/_inbox/` 写入完整新文件，补齐 frontmatter，成功后才删除 `_inbox/` 中的原始落地文件（Web Clipper 等产生的未格式化文件）。
 
 触发方式：`raw --triage` 或当用户说"处理一下 _inbox"时自动触发。
 
@@ -120,8 +119,9 @@ Uncompiled total: 12 → suggest `compile --batch`
 
 ## 约束
 
-- `raw` 阶段生成 Summary 文档到 `wiki/summaries/_inbox/`，但不生成 `wiki/concepts`
+- `raw` 阶段只写入 `raw/_inbox/`，不生成 Summary 文档、不生成 `wiki/concepts`
 - `raw` 阶段不直接写 topic / synthesis 结论页
+- Summary 文档由 compile Phase A 统一生成
 - 目标是低摩擦入库，不追求一次整理到位
 - 如果用户只是"先存一下"，优先成功落盘
 - Git repo 不要 clone 完整历史，用 `--depth 1`

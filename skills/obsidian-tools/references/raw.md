@@ -24,7 +24,7 @@
 
 ## 目标
 
-把原始内容保存到 `raw/{area}/`，把图片/附件统一保存到 `raw/assets/`，补齐 frontmatter 并生成 summary，不做 wiki/concepts。
+把原始内容保存到 `raw/_inbox/`，把图片/附件统一保存到 `raw/assets/`，补齐 frontmatter（含 summary 字段供浏览），等待 compile 统一编译。不生成 Summary 文档，不做 wiki/concepts。
 
 ## 执行步骤
 
@@ -43,13 +43,13 @@
    - `tags`
    - `summary`
 5. 将图片/附件统一写入 `raw/assets/`
-6. 使用 Unix 命令写入 `raw/{area}/`
+6. 使用 Unix 命令写入 `raw/_inbox/`
 7. 记录到 `wiki/log.md`
 8. 返回给用户
-   - 保存路径
-   - area
+   - 保存路径（`raw/_inbox/` 中的文件）
+   - area（写入 frontmatter，compile 阶段据此移到 `raw/{area}/`）
    - summary
-   - 建议下一步执行 `compile`
+   - 当前未编译总数 + 建议下一步执行 `compile`
 
 ## _inbox Triage
 
@@ -58,7 +58,8 @@
 
 ## 约束
 
-- `raw` 阶段生成 summary 但不生成 `wiki/summaries` 或 `wiki/concepts`
-- raw 文件写入后不可变
+- `raw` 阶段只写入 `raw/_inbox/`，不生成 Summary 文档、不生成 `wiki/concepts`
+- Summary 文档由 compile Phase A 统一生成
+- raw 文件被 compile 移入 `raw/{area}/` 后不可变
 - 目标是低摩擦入库
 - 日志只写 `wiki/log.md`

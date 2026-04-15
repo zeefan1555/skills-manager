@@ -30,12 +30,12 @@
 │   ├── log.md              ← 统一活动日志
 │   ├── glossary.md         ← 术语表
 │   ├── summaries/          ← L3 来源层
-│   │   └── _inbox/          ← raw 写入，compile 处理后移到根目录
+│   │   └── _inbox/          ← compile Phase A 生成，Phase B 后移到根目录
 │   ├── concepts/           ← L2 概念层
 │   ├── topics/             ← 主题聚合
 │   └── syntheses/          ← 综合/比较/高价值问答
 ├── outputs/
-│   ├── qa/                 ← ask 命令的问答归档
+│   ├── qa/                 ← query / ask 命令的问答归档
 │   │   └── _inbox/          ← 待反哺 QA，compile 处理后移到根目录
 │   ├── health/
 │   ├── remnote/
@@ -119,7 +119,7 @@ summary: |
 
 ## Summary 笔记格式
 
-> raw 命令在收录时同步生成 Summary 文档到 `wiki/summaries/_inbox/`，作为 L3 层的单来源分析页。compile 处理后将 Summary 移到 `wiki/summaries/`。
+> Summary 文档由 compile Phase A 统一生成到 `wiki/summaries/_inbox/`，作为 L3 层的单来源分析页。compile Phase B 处理后将 Summary 移到 `wiki/summaries/`。raw 命令不生成 Summary 文档。
 
 ```yaml
 ---
@@ -132,8 +132,8 @@ tags:
 ---
 ```
 
-- raw 阶段创建到 `wiki/summaries/_inbox/S-{编号}-{slug}.md`
-- compile 处理后移动到 `wiki/summaries/S-{编号}-{slug}.md`
+- compile Phase A 生成到 `wiki/summaries/_inbox/S-{编号}-{slug}.md`
+- compile Phase B 处理后移动到 `wiki/summaries/S-{编号}-{slug}.md`
 - 包含原文要点、关键结论、引用 backlink
 - 面向单个来源的分析页（L3 Summary）
 - 若 vault 主要是中文内容，标题与文件名优先使用中文可读名称
@@ -341,7 +341,7 @@ tags:
 
 ## Search 阶段运行时属性
 
-这些属性只在 `ask` 阶段维护，优先写 frontmatter property，不要散落到正文。
+这些属性只在 `query` 阶段维护，优先写 frontmatter property，不要散落到正文。
 
 ```yaml
 search_hits: 2
@@ -360,17 +360,17 @@ remnote_backup: "[[outputs/remnote/2026-04-05-example-remnote]]"
 ```
 
 其中：
-- `action` 可选值：`ingest`、`compile`、`ask`、`lint`、`promote`、`output`
+- `action` 可选值：`ingest`、`compile`、`query`、`ask`、`lint`、`promote`、`output`
 - `ingest` 链接到 raw 文件：`[[2026-04-06 tmux attach、switch-client 与嵌套会话]]`
 - `compile` 链接到 Summary 文件：`[[S-019-ai-近30天跨平台舆情观察]]`
-- `ask` 链接到产出文件：`[[如果我要做晋升答辩...]]`
+- `query` 链接到产出文件：`[[如果我要做晋升答辩...]]`
 - 一次 compile 涉及多个文件时，空格分隔多个 wikilink
 
 > **wiki/log.md 是活动日志**，不是编译状态的 source of truth。编译状态由文件夹位置决定（`raw/_inbox/` = 待编译 raw，`summaries/_inbox/` = 待编译 summary，`outputs/qa/_inbox/` = 待反哺 QA）。
 
 ## 关键约束
 
-- `raw` 阶段同时生成 Summary 文档到 `wiki/summaries/_inbox/`（frontmatter 中仍保留 `summary` 字段，但编译流程依赖 Summary 文档而非该字段）
+- `raw` 阶段只写入 `raw/_inbox/`（frontmatter 中保留 `summary` 字段供浏览），不生成 Summary 文档。Summary 由 compile Phase A 统一生成
 - `raw` 文件写入 `raw/_inbox/`，compile 处理后移到 `raw/{area}/`
 - `compile` 通过扫描 3 个 _inbox 文件夹判断待编译列表
 - `compile` 完成后将 Summary 从 `_inbox/` 移到 `wiki/summaries/` 根目录，raw 从 `raw/_inbox/` 移到 `raw/{area}/`，QA 从 `outputs/qa/_inbox/` 移到 `outputs/qa/` 根目录
@@ -379,7 +379,7 @@ remnote_backup: "[[outputs/remnote/2026-04-05-example-remnote]]"
 - `compile` 阶段优先更新受影响页面，不只是机械生成新文件
 - 高价值问答优先写入 `wiki/syntheses/`，而不是长期停留在 `outputs/qa/`
 - `search_hits` 只记在最终命中的主笔记上
-- `ask` 的普通结果归档到 `outputs/qa/`；需要反哺的结果保存到 `outputs/qa/_inbox/`
+- `query` 的普通结果归档到 `outputs/qa/`；需要反哺的结果保存到 `outputs/qa/_inbox/`
 - `wiki/index.md` 是唯一索引文件，也是首要导航页
 - `output` 产出归档到 `outputs/slides/`、`outputs/charts/` 等
 - `lint` 报告归档到 `outputs/health/`
