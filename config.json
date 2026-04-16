@@ -2,35 +2,29 @@
   "version": "2.0.2",
   "skills_dir": "/Users/bytedance/.skills-manager/skills",
   "tools": {
-    "opencode": {
-      "enabled": false,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.config/opencode/skills",
-      "config_path": "/Users/bytedance/.config/opencode"
-    },
-    "hermes": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.hermes/skills",
-      "config_path": "/Users/bytedance/.hermes"
-    },
     "goose": {
       "enabled": false,
       "detected": false,
       "skills_path": "/Users/bytedance/.config/goose/skills",
       "config_path": "/Users/bytedance/.config/goose"
     },
-    "openclaw": {
-      "enabled": true,
+    "trae": {
+      "enabled": false,
       "detected": true,
-      "skills_path": "/Users/bytedance/.openclaw/skills",
-      "config_path": "/Users/bytedance/.openclaw"
+      "skills_path": "/Users/bytedance/.trae/skills",
+      "config_path": "/Users/bytedance/.trae"
     },
-    "junie": {
+    "windsurf": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.junie/skills",
-      "config_path": "/Users/bytedance/.junie"
+      "skills_path": "/Users/bytedance/.windsurf/skills",
+      "config_path": "/Users/bytedance/.windsurf"
+    },
+    "zencoder": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.zencoder/skills",
+      "config_path": "/Users/bytedance/.zencoder"
     },
     "iflow": {
       "enabled": false,
@@ -38,11 +32,17 @@
       "skills_path": "/Users/bytedance/.iflow/skills",
       "config_path": "/Users/bytedance/.iflow"
     },
-    "continue": {
+    "qoder": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.continue/skills",
-      "config_path": "/Users/bytedance/.continue"
+      "skills_path": "/Users/bytedance/.qoder/skills",
+      "config_path": "/Users/bytedance/.qoder"
+    },
+    "crush": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.config/crush/skills",
+      "config_path": "/Users/bytedance/.config/crush"
     },
     "claude-code": {
       "enabled": true,
@@ -50,17 +50,29 @@
       "skills_path": "/Users/bytedance/.claude/skills",
       "config_path": "/Users/bytedance/.claude"
     },
-    "kilo-code": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.kilocode/skills",
-      "config_path": "/Users/bytedance/.kilocode"
+    "codex": {
+      "enabled": true,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.codex/skills",
+      "config_path": "/Users/bytedance/.codex"
     },
-    "zencoder": {
+    "antigravity": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.zencoder/skills",
-      "config_path": "/Users/bytedance/.zencoder"
+      "skills_path": "/Users/bytedance/.antigravity/skills",
+      "config_path": "/Users/bytedance/.antigravity"
+    },
+    "codebuddy": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.codebuddy/skills",
+      "config_path": "/Users/bytedance/.codebuddy"
+    },
+    "trae-cn": {
+      "enabled": true,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.trae-cn/skills",
+      "config_path": "/Users/bytedance/.trae-cn"
     },
     "pi": {
       "enabled": false,
@@ -74,53 +86,11 @@
       "skills_path": "/Users/bytedance/.agents/skills",
       "config_path": "/Users/bytedance/.agents"
     },
-    "codebuddy": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.codebuddy/skills",
-      "config_path": "/Users/bytedance/.codebuddy"
-    },
-    "codex": {
-      "enabled": true,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.codex/skills",
-      "config_path": "/Users/bytedance/.codex"
-    },
-    "windsurf": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.windsurf/skills",
-      "config_path": "/Users/bytedance/.windsurf"
-    },
-    "trae": {
+    "gemini": {
       "enabled": false,
       "detected": true,
-      "skills_path": "/Users/bytedance/.trae/skills",
-      "config_path": "/Users/bytedance/.trae"
-    },
-    "trae-cn": {
-      "enabled": true,
-      "detected": true,
-      "skills_path": "/Users/bytedance/.trae-cn/skills",
-      "config_path": "/Users/bytedance/.trae-cn"
-    },
-    "qoder": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.qoder/skills",
-      "config_path": "/Users/bytedance/.qoder"
-    },
-    "qwen-code": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.qwen/skills",
-      "config_path": "/Users/bytedance/.qwen"
-    },
-    "crush": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.config/crush/skills",
-      "config_path": "/Users/bytedance/.config/crush"
+      "skills_path": "/Users/bytedance/.gemini/skills",
+      "config_path": "/Users/bytedance/.gemini"
     },
     "kiro": {
       "enabled": false,
@@ -128,35 +98,35 @@
       "skills_path": "/Users/bytedance/.kiro/skills",
       "config_path": "/Users/bytedance/.kiro"
     },
-    "gemini": {
+    "hermes": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.hermes/skills",
+      "config_path": "/Users/bytedance/.hermes"
+    },
+    "kilo-code": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.kilocode/skills",
+      "config_path": "/Users/bytedance/.kilocode"
+    },
+    "opencode": {
       "enabled": false,
       "detected": true,
-      "skills_path": "/Users/bytedance/.gemini/skills",
-      "config_path": "/Users/bytedance/.gemini"
+      "skills_path": "/Users/bytedance/.config/opencode/skills",
+      "config_path": "/Users/bytedance/.config/opencode"
     },
-    "commandcode": {
+    "junie": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.commandcode/skills",
-      "config_path": "/Users/bytedance/.commandcode"
+      "skills_path": "/Users/bytedance/.junie/skills",
+      "config_path": "/Users/bytedance/.junie"
     },
-    "augment": {
+    "continue": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.augment/skills",
-      "config_path": "/Users/bytedance/.augment"
-    },
-    "cursor": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.cursor/skills",
-      "config_path": "/Users/bytedance/.cursor"
-    },
-    "cline": {
-      "enabled": false,
-      "detected": false,
-      "skills_path": "/Users/bytedance/.cline/skills",
-      "config_path": "/Users/bytedance/.cline"
+      "skills_path": "/Users/bytedance/.continue/skills",
+      "config_path": "/Users/bytedance/.continue"
     },
     "droid": {
       "enabled": false,
@@ -164,24 +134,54 @@
       "skills_path": "/Users/bytedance/.factory/skills",
       "config_path": "/Users/bytedance/.factory"
     },
-    "antigravity": {
+    "commandcode": {
       "enabled": false,
       "detected": false,
-      "skills_path": "/Users/bytedance/.antigravity/skills",
-      "config_path": "/Users/bytedance/.antigravity"
+      "skills_path": "/Users/bytedance/.commandcode/skills",
+      "config_path": "/Users/bytedance/.commandcode"
+    },
+    "cline": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.cline/skills",
+      "config_path": "/Users/bytedance/.cline"
     },
     "roo-code": {
       "enabled": false,
       "detected": false,
       "skills_path": "/Users/bytedance/.roo/skills",
       "config_path": "/Users/bytedance/.roo"
+    },
+    "openclaw": {
+      "enabled": true,
+      "detected": true,
+      "skills_path": "/Users/bytedance/.openclaw/skills",
+      "config_path": "/Users/bytedance/.openclaw"
+    },
+    "cursor": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.cursor/skills",
+      "config_path": "/Users/bytedance/.cursor"
+    },
+    "augment": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.augment/skills",
+      "config_path": "/Users/bytedance/.augment"
+    },
+    "qwen-code": {
+      "enabled": false,
+      "detected": false,
+      "skills_path": "/Users/bytedance/.qwen/skills",
+      "config_path": "/Users/bytedance/.qwen"
     }
   },
   "custom_tools": {
-    "traecli": {
-      "name": "traecli",
-      "config_path": "/Users/bytedance/.coco",
-      "skills_path": "/Users/bytedance/.coco/skills",
+    "obsidian-trae": {
+      "name": "Obsidian-Trae",
+      "config_path": "/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent/.trae",
+      "skills_path": "/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent/.trae/skills",
       "enabled": true,
       "icon_path": null
     },
@@ -192,10 +192,10 @@
       "enabled": true,
       "icon_path": null
     },
-    "obsidian-trae": {
-      "name": "Obsidian-Trae",
-      "config_path": "/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent/.trae",
-      "skills_path": "/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/agent/.trae/skills",
+    "traecli": {
+      "name": "traecli",
+      "config_path": "/Users/bytedance/.coco",
+      "skills_path": "/Users/bytedance/.coco/skills",
       "enabled": true,
       "icon_path": null
     }
@@ -206,12 +206,17 @@
         "social_pet"
       ]
     },
-    "global:social-pet-rpc-verify-loop": {
+    "global:social-pet-local-test": {
       "tags": [
         "social_pet"
       ]
     },
-    "global:social-pet-local-test": {
+    "global:social-pet-rpc-pod-triage": {
+      "tags": [
+        "social_pet"
+      ]
+    },
+    "global:social-pet-rpc-verify-loop": {
       "tags": [
         "social_pet"
       ]
@@ -219,11 +224,6 @@
     "global:karpathy-guidelines": {
       "tags": [
         "指定原则"
-      ]
-    },
-    "global:social-pet-rpc-pod-triage": {
-      "tags": [
-        "social_pet"
       ]
     }
   },
@@ -269,7 +269,7 @@
   },
   "auth_session": {
     "provider": "github",
-    "access_token": "49c061cc-9082-4baa-affb-469ccb53bec6",
+    "access_token": "7e2481b5-7923-4960-b428-3475d65f3abd",
     "refresh_token": "14f3d9c4-316e-4906-b6b2-7d1f355791c9",
     "profile": {
       "username": "zeefan1555",

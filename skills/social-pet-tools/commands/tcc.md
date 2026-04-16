@@ -114,14 +114,21 @@ tcc get-config "<namespace>" "<config_name>" \
 
 ## 证据落盘（推荐文件集）
 
-最小证据集（默认写 `/tmp`，方便回滚/复核）：
+产物落盘到当前 session 的 `tcc/` 子目录（详见 `../references/conventions.md` "证据落盘路径规范（AI 审计目录）"）：
 
-- `/tmp/tcc_<config_name>_<env>_get.json`
-- `/tmp/tcc_<config_name>_<env>_before_base.json`
-- `/tmp/tcc_<config_name>_<env>_after_base.json`
-- `/tmp/tcc_<config_name>_<env>_update.json`
-- `/tmp/tcc_<config_name>_<env>_deploy.json`
-- `/tmp/tcc_<config_name>_<env>_verify_get.json`
+```
+docs/social-pet/<date-topic>/tcc/
+```
+
+执行过程中的临时文件仍写 `/tmp`，但最终证据应拷贝到上述目录：
+
+- `tcc_<config_name>_<env>_get.json` — 修改前配置
+- `tcc_<config_name>_<env>_before_base.json` — 修改前 base
+- `tcc_<config_name>_<env>_after_base.json` — 修改后 base
+- `tcc_<config_name>_<env>_update.json` — update 回包
+- `tcc_<config_name>_<env>_deploy.json` — deploy 回包
+- `tcc_<config_name>_<env>_verify_get.json` — 发布后验证
+- `verdict.md` — AI 判定（含变更前后对比、发布结果、结论）
 
 ## 最小改动模板（JSON base：列表字段去重追加）
 
