@@ -80,7 +80,7 @@ NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest 
 NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest --json \
 tcc get-config "<namespace>" "<config_name>" \
   --env "<env>" --region "<region>" --dir "<dir>" \
-  [--site "<site>"] > /tmp/tcc_<config_name>_<env>_get.json
+  --site "<site>" > /tmp/tcc_<config_name>_<env>_get.json
 ```
 
 更新配置（用 `--file`，避免 inline value 被 shell/引号污染）：
@@ -91,7 +91,7 @@ tcc update-config "<namespace>" "<config_name>" \
   --env "<env>" --region "<region>" --dir "<dir>" \
   --file /tmp/tcc_<config_name>_<env>_after_base.json \
   --note "<note>" \
-  [--site "<site>"] > /tmp/tcc_<config_name>_<env>_update.json
+  --site "<site>" > /tmp/tcc_<config_name>_<env>_update.json
 ```
 
 发布配置：
@@ -100,7 +100,7 @@ tcc update-config "<namespace>" "<config_name>" \
 NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest --json \
 tcc deploy-config "<namespace>" "<config_name>" \
   --env "<env>" --region "<region>" \
-  [--site "<site>"] > /tmp/tcc_<config_name>_<env>_deploy.json
+  --site "<site>" > /tmp/tcc_<config_name>_<env>_deploy.json
 ```
 
 发布后验证（以 `online_version.version` 和目标字段值为准）：
@@ -109,7 +109,7 @@ tcc deploy-config "<namespace>" "<config_name>" \
 NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest --json \
 tcc get-config "<namespace>" "<config_name>" \
   --env "<env>" --region "<region>" --dir "<dir>" \
-  [--site "<site>"] > /tmp/tcc_<config_name>_<env>_verify_get.json
+  --site "<site>" > /tmp/tcc_<config_name>_<env>_verify_get.json
 ```
 
 ## 证据落盘（推荐文件集）
