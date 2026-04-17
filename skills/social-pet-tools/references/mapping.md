@@ -14,6 +14,7 @@
 | `rpc-acceptance` | `social-pet-rpc-acceptance-loop` | 面向 RPC 黑盒验收与多 case 验证 |
 | `rpc-pod-triage` | `social-pet-rpc-pod-triage` | 单次请求按 pod / 实例日志链路排障 |
 | `rpc-verify` | `social-pet-rpc-verify-loop` | 改码后进入“单测 -> RPC -> 修复 -> 重试”的验证闭环 |
+| `rpc-verify-spec` | — | 仅生成验证文档、预期返回和断言，不执行真实 RPC；与 `rpc-verify` 互补 |
 | `oncall` | `social-pet-oncall` | `social-pet` 相关 oncall 处置入口 |
 
 ## 使用建议
@@ -21,6 +22,8 @@
 - 新任务优先从 `social-pet-tools` 进入，先做统一路由判断
 - 需要查看旧流程细节、模板、refs 或历史约束时，直接跳转到对应旧 skill
 - 如果聚合层的命令文档尚未落地，默认使用这里映射到的旧 skill
+- 当用户要“先梳理接口请求/返回/断言文档，不实际打 RPC”时，优先使用 `rpc-verify-spec`
+- 当用户要“本地单测 + 真实 RPC 调用 + 回包校验 + 重试闭环”时，继续使用 `rpc-verify`
 
 ## 兼容说明
 

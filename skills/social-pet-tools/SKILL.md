@@ -43,6 +43,7 @@ social-pet-tools/
 │   ├── rpc-acceptance.md
 │   ├── rpc-pod-triage.md
 │   ├── rpc-verify.md
+│   ├── rpc-verify-spec.md
 │   └── tcc.md
 └── references/
     ├── conventions.md
@@ -73,6 +74,7 @@ social-pet-tools/
 - 聚合层不改写旧 skill 的历史约束；如有差异，以旧 skill 的原始细节为准
 - 对空白或未沉淀完成的子域，不要虚构流程或模板
 - 每次任务的全部子命令产物（请求体、回包、AI 判定）统一落盘到仓库 `docs/social-pet/<date-topic>/` 下，按子命令分子目录；执行 Agent 写 `verdict.md`，审核 Agent 写 `review.md`；详见 `references/conventions.md` "证据落盘路径规范（AI 审计目录）"
+- `rpc-verify-spec` 只生成验证文档、预期返回和断言，不执行真实 `rpc-call`
 
 详细公共约束见：
 
@@ -90,6 +92,7 @@ social-pet-tools/
 | `rpc-acceptance` | `commands/rpc-acceptance.md` | `social-pet-rpc-acceptance-loop` |
 | `rpc-pod-triage` | `commands/rpc-pod-triage.md` | `social-pet-rpc-pod-triage` |
 | `rpc-verify` | `commands/rpc-verify.md` | `social-pet-rpc-verify-loop` |
+| `rpc-verify-spec` | `commands/rpc-verify-spec.md` | `aggregate-native` |
 | `oncall` | `commands/oncall.md` | `social-pet-oncall` |
 
 ### 语义路由
@@ -103,6 +106,9 @@ social-pet-tools/
 | “帮我做一轮 RPC 黑盒验收” | `rpc-acceptance` |
 | “按 pod 日志链路排查这次请求” | `rpc-pod-triage` |
 | “改完代码后帮我继续 RPC 验证” | `rpc-verify` |
+| “帮我把受影响接口的预期返回和断言梳理成文档” | `rpc-verify-spec` |
+| “不打 rpc-call，只生成每个接口的验证文档” | `rpc-verify-spec` |
+| “给你改动点和预期结果，输出每个接口的请求、返回、断言” | `rpc-verify-spec` |
 | “处理 social-pet oncall 事务” | `oncall` |
 
 ## 兼容性说明
