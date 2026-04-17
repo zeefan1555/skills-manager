@@ -40,6 +40,16 @@
    - `svn commit`
    - 返回可复制 Lark 文案
 
+## Excel 配置规则
+
+- 如果目标配置文件是 `.xlsx`，优先使用 `officecli` 与 `officecli-xlsx` 处理增删改查
+- 查看 / 查询内容时，优先使用 `officecli view`、`officecli get`、`officecli query`
+- 修改内容时，优先使用 `officecli set`、`officecli add`、`officecli remove`
+- 修改完成后必须显式执行 `officecli close <file>`，确保 Excel 文件已保存到磁盘
+- 保存后必须重新读取目标单元格、区域或工作表做最小校验；必要时执行 `officecli validate` 或 `officecli view <file> issues`
+- 只有在 Excel 内容已保存且最小校验通过后，才继续执行 `svn diff`、`svn status`、`svn commit`
+- 具体命令细节优先参考 `officecli` 与 `officecli-xlsx`
+
 ## 证据落盘
 
 产物落盘到当前 session 的 `cds/` 子目录（详见 `../references/conventions.md` "证据落盘路径规范（AI 审计目录）"）：

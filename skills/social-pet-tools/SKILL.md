@@ -47,6 +47,7 @@ social-pet-tools/
 │   └── tcc.md
 └── references/
     ├── conventions.md
+    ├── env.md
     └── mapping.md
 ```
 
@@ -59,7 +60,8 @@ social-pet-tools/
 ## 加载规则
 
 - 先读取本文件，判断当前任务是否属于 `social_pet` 聚合路由范围
-- 优先依据显式命令或语义意图选择目标命令
+- 固定读取 `references/env.md`，获取当前需求共享环境信息
+- 再依据显式命令或语义意图选择目标命令
 - 命中命令后，只按需读取对应的 `commands/*.md`
 - 涉及跨命令公共规则时，再读取 `references/conventions.md`
 - 需要确认旧 skill 对照关系或回退兼容时，再读取 `references/mapping.md`
@@ -121,4 +123,5 @@ social-pet-tools/
 ## References
 
 - `references/conventions.md`
+- `references/env.md`
 - `references/mapping.md`
