@@ -1,0 +1,31 @@
+{
+  "new_getpetelfcfg_first": {
+    "log_id": "202604171609216416C1D1FAD2A9EF0899",
+    "pod_name": "dp-5d9df86c95-7dfd67c46c-hst5j",
+    "status_code": 0,
+    "need_update_widget": true
+  },
+  "new_updatewidget": {
+    "log_id": "2026041716094289A21F8C659817915D0D",
+    "pod_name": "dp-530d9cfcba-5dcc95dcdc-qlkqz",
+    "status_code": 0
+  },
+  "new_getwidget": {
+    "log_id": "20260417160955D5FFDD63317C2D500837",
+    "pod_name": "dp-530d9cfcba-5dcc95dcdc-qlkqz",
+    "status_code": 0,
+    "widget_count": 14,
+    "has_401_405": {
+      "401": true,
+      "402": true,
+      "403": false,
+      "404": false,
+      "405": false
+    },
+    "widget_sub_type": 1,
+    "extra_resource_keys": [
+      "401",
+      "402"
+    ]
+  }
+}

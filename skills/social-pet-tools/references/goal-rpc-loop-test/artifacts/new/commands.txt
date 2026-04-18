@@ -1,0 +1,26 @@
+# 新增用户流程命令清单
+
+## 1. 第一次 GetPetElfCfg
+```bash
+NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest rpc call ttgame.social.pet GetPetElfCfg --env ppe_tab_template --env-type ppe --region China-North --file log/new/01-req-GetPetElfCfg-first.json
+```
+
+## 2. UpdateWidget
+```bash
+NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest rpc call ttgame.social.pet UpdateWidget --env ppe_tab_template --env-type ppe --region China-North --file log/new/02-req-UpdateWidget.json
+```
+
+## 3. GetWidget
+```bash
+NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest rpc call ttgame.social.pet GetWidget --env ppe_tab_template --env-type ppe --region China-North --file log/new/03-req-GetWidget.json
+```
+
+## 4. 再次 GetPetElfCfg
+```bash
+NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest rpc call ttgame.social.pet GetPetElfCfg --env ppe_tab_template --env-type ppe --region China-North --file log/new/04-req-GetPetElfCfg-second.json
+```
+
+## 5. 查实例日志（GetWidget）
+```bash
+NPM_CONFIG_REGISTRY=http://bnpm.byted.org npx -y @bytedance-dev/bytedcli@latest log get-lane-instance-log ttgame.social.pet --env ppe_tab_template --env-type ppe --region China-North --keyword 20260417160955D5FFDD63317C2D500837
+```

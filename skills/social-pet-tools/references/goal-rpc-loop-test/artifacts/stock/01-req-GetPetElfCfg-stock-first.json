@@ -1,0 +1,32 @@
+{
+  "Aid": 1129,
+  "UserID": 4196178329875469,
+  "DeviceID": 1391327338308871,
+  "HasWidget": true,
+  "Version": 2,
+  "IsGrowth": true,
+  "ImageID": 631787591426,
+  "StickerIDs": [1014, 4012],
+  "ActionIDs": [11009],
+  "UserDevices": {
+    "4196178329875469": {
+      "app_id": 1349,
+      "last_time": 0,
+      "device_id": 1391327338308871,
+      "version_code": "380700",
+      "device_platform": "iphone",
+      "install_id": 7507527630653113915
+    }
+  },
+  "Extra": {
+    "conversation_short_id": "7606088834656338478",
+    "cur_image": "{\"round\":12,\"total_spark\":220}",
+    "bag": "{\"loaded_actions\":{\"1\":[11008,11007,11006,11005,11009,11011],\"3\":[11008,11007,11006,11005,11009,11011],\"2\":[11008,11007,11006,11005,11009,11011]},\"loaded_action_round\":11,\"image_special_round\":{\"2\":11,\"3\":11,\"1\":11}}"
+  },
+  "Base": {
+    "Caller": "rpc-verify",
+    "Extra": {
+      "env": "ppe_tab_template"
+    }
+  }
+}

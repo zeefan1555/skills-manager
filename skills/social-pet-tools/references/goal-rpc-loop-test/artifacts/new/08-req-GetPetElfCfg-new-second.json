@@ -1,0 +1,19 @@
+{
+  "Aid": 1129,
+  "UserID": 4477653324664615,
+  "DeviceID": 649136499878756,
+  "HasWidget": true,
+  "Version": 2,
+  "IsGrowth": true,
+  "Extra": {
+    "conversation_short_id": "7606088834656338478",
+    "cur_image": "{\"expire_ts\":0}",
+    "widget": "{\"completed\":{\"image_id\":0,\"sticker_version\":0,\"version\":11},\"version\":11}"
+  },
+  "Base": {
+    "Caller": "rpc-verify",
+    "Extra": {
+      "env": "ppe_tab_template"
+    }
+  }
+}

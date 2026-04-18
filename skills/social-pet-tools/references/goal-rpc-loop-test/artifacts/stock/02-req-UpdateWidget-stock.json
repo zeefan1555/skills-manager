@@ -1,0 +1,14 @@
+{
+  "UserId": 4196178329875469,
+  "Aid": 1129,
+  "DeviceId": 1391327338308871,
+  "ConversationShortID": "7606088834656338478",
+  "HasWidget": true,
+  "Reason": 4,
+  "Base": {
+    "Caller": "rpc-verify",
+    "Extra": {
+      "env": "ppe_tab_template"
+    }
+  }
+}

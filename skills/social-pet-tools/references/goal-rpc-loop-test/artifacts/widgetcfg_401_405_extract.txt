@@ -1,0 +1,7 @@
+source: /Users/bytedance/bytecode/im_pet/ppe_tab_template/Widget/WidgetCfg.xlsx
+
+401: sparkCond=[1], subType=1, extraParam=non-empty
+402: sparkCond=[1], subType=1, extraParam=non-empty
+403: sparkCond=[1], subType=2, extraParam=non-empty
+404: sparkCond=[1], subType=2, extraParam=non-empty
+405: sparkCond=[1], subType=(empty), extraParam=(empty)

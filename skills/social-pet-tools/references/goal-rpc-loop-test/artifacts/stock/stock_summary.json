@@ -1,0 +1,37 @@
+{
+  "stock_getpetelfcfg_first": {
+    "log_id": "2026041716074932CE99D7CBB9D73E0483",
+    "pod_name": "dp-5d9df86c95-7dfd67c46c-hst5j",
+    "status_code": 0,
+    "need_update_widget": true
+  },
+  "stock_updatewidget": {
+    "log_id": "2026041716080529B7FF947FDD3E842F73",
+    "pod_name": "dp-530d9cfcba-5dcc95dcdc-qlkqz",
+    "status_code": 0
+  },
+  "stock_getwidget": {
+    "log_id": "2026041716082211C7699BEEE5686D77D2",
+    "pod_name": "dp-5d9df86c95-7dfd67c46c-hst5j",
+    "status_code": 0,
+    "widget_count": 14,
+    "has_401_405": {
+      "401": true,
+      "402": true,
+      "403": false,
+      "404": false,
+      "405": false
+    },
+    "widget_sub_type": 1,
+    "extra_resource_keys": [
+      "401",
+      "402"
+    ]
+  },
+  "stock_getpetelfcfg_second": {
+    "log_id": "2026041716084161675B033BE4EE6FF635",
+    "pod_name": "dp-530d9cfcba-5dcc95dcdc-qlkqz",
+    "status_code": 0,
+    "need_update_widget": false
+  }
+}
