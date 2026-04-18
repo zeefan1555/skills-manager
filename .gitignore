@@ -1,2 +1,6 @@
 .worktrees/
-.worktrees/
+docs/
+tmp/
+cache/
+telemetry/
+**/__pycache__/
