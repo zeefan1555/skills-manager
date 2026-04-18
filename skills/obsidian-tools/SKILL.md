@@ -60,6 +60,10 @@ vault/
 │   ├── qa/
 │   │   └── _inbox/          ← 待反哺 QA，compile 后移到根目录
 │   ...
+├── todo/                    ← todo 根目录
+│   ├── _inbox/              ← todo add 写入，待分类/整理/执行
+│   ├── doing/               ← 进行中的 todo
+│   └── done/                ← 已完成的 todo
 ```
 
 **加载规则**：
@@ -87,6 +91,7 @@ vault/
 | 查看 CLI 用法 | `cli` | `references/obsidian-cli.md` |
 | 查看 Markdown 语法 | `markdown` | `references/markdown.md` |
 | 操作 .base 文件 | `bases` | `references/bases.md` |
+| 把内容作为 todo 存到知识库 / 批量执行待办 | `todo` | `commands/todo.md` |
 
 ## 前置检查
 
@@ -192,6 +197,8 @@ raw → compile → wiki pages → query / ask / output / lint
 | `cli` / `obsidian-cli` | `references/obsidian-cli.md` |
 | `markdown` / `md` | `references/markdown.md` |
 | `bases` / `base` | `references/bases.md` |
+| `todo &lt;内容&gt;` / `todo add &lt;内容&gt;` | `commands/todo.md` → todo add |
+| `todo run` / `todo process` | `commands/todo.md` → todo run |
 
 ### 语义路由（无显式命令时）
 
@@ -204,6 +211,8 @@ raw → compile → wiki pages → query / ask / output / lint
 | "做个幻灯片" / "画个对比图" | `output` |
 | "知识库有什么问题吗" | `lint` |
 | "现在知识库什么情况" | `status` |
+| "把这个作为 todo 存一下" / "记个 todo：xxx" / "帮我加个待办：xxx" | `todo add` |
+| "帮我处理一下 todo" / "把待办都跑一下" / "todo 全执行" | `todo run` |
 
 一条消息里有多个命令时，按书写顺序逐个执行。
 
@@ -224,6 +233,7 @@ raw → compile → wiki pages → query / ask / output / lint
 | `lint` 发现未编译积压 | 自动建议 `compile` |
 | `_inbox/` 中有文件 | 提示 `raw --triage` 处理 |
 | 首次使用 / 新会话 | 建议先 `status` 了解当前状态 |
+| `todo/_inbox/` 中有 &gt;0 个文件 | 提示用户是否 `todo run` |
 
 ## 给 agent 的建议执行顺序
 
