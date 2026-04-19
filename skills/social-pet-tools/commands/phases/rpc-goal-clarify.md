@@ -25,6 +25,16 @@
 - `goal-rpc-loop/00-raw-expectation.md`
 - `goal-rpc-loop/01-plan.md`
 
+## 主流程传入内容
+
+主流程在派发本阶段时，至少要显式给出：
+
+- 当前 session 路径
+- `goal-rpc-loop/00-raw-expectation.md`
+- `goal-rpc-loop/01-plan.md`
+- 当前最小目标：把宏观预期收敛成可执行请求
+- 当前边界：不进入真实 RPC 执行，不直接做 gap 归因
+
 ## 输出目录
 
 固定输出到：
@@ -34,7 +44,8 @@ goal-rpc-loop/rpc-goal-clarify/
 ├── input.md
 ├── affected-rpcs.md
 ├── request-derivation.md
-└── open-questions.md
+├── open-questions.md
+└── result.json
 ```
 
 ## 各文件职责
@@ -47,6 +58,8 @@ goal-rpc-loop/rpc-goal-clarify/
   - 从代码、状态、环境推导请求字段
 - `open-questions.md`
   - 仍然不确定、需要后续验证的问题
+- `result.json`
+  - 返回给主流程的结构化阶段结果
 
 ## 任务目标
 
@@ -60,6 +73,37 @@ goal-rpc-loop/rpc-goal-clarify/
 4. 写出第一轮请求候选
 5. 列出当前还没确认的问题
 
+## 阶段执行边界
+
+- 只负责把预期收敛成第一轮最小请求候选
+- 不负责真实 RPC 调用
+- 不负责跨轮 gap 闭环
+- 若发现需要日志、配置或 TCC 前提，返回主流程决定是否切 shared
+
+## 返回协议
+
+本阶段完成后必须写 `goal-rpc-loop/rpc-goal-clarify/result.json`，至少包含：
+
+```json
+{
+  "phase": "rpc-goal-clarify",
+  "status": "NEEDS_NEXT_PHASE",
+  "artifacts_written": [
+    "goal-rpc-loop/rpc-goal-clarify/affected-rpcs.md",
+    "goal-rpc-loop/rpc-goal-clarify/request-derivation.md"
+  ],
+  "key_findings": [
+    "已识别第一轮最小请求候选"
+  ],
+  "open_questions": [],
+  "shared_command_needed": "none",
+  "next_recommendation": "rpc-first-pass",
+  "summary_input": [
+    "原始预期已转化成接口链路与请求候选"
+  ]
+}
+```
+
 ## 完成条件
 
 只有同时满足下面条件，才算 `rpc-goal-clarify` 完成：
@@ -67,4 +111,5 @@ goal-rpc-loop/rpc-goal-clarify/
 1. 已写出接口链路
 2. 已写出第一轮最小请求候选
 3. 已把不确定点落到 `open-questions.md`
-4. 下一步已经明确可以转到 `rpc-first-pass`
+4. 已写出 `result.json`
+5. 已明确返回主流程，由主流程决定是否进入 `rpc-first-pass` 或 shared 分支

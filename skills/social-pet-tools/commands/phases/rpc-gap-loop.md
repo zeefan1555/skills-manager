@@ -8,9 +8,13 @@
 
 ## 定位
 
-这是 **阶段 3：差异闭环**。
+这是 **阶段 3：差异闭环** 的单轮 worker。
 
-它负责处理首轮执行后仍未解释清楚的差异，直到差异被证据解释清楚，而不是停留在：
+它负责在主流程给定的“当前最小 gap”下完成一轮 `round-N/` 证据闭环，并把控制权交回 `goal-rpc-loop`。
+
+它不负责在 phase 内无限循环到结束。
+
+本阶段关注的差异通常来自：
 
 1. 请求不对
 2. 状态不对
@@ -35,6 +39,15 @@
 - `goal-rpc-loop/rpc-first-pass/responses/`
 - `goal-rpc-loop/rpc-first-pass/logs/`
 - `goal-rpc-loop/rpc-gap-loop/round-*/`
+
+## 主流程传入内容
+
+主流程在派发本阶段时，至少要给出：
+
+- 当前 session 路径
+- 当前要解释的最小 gap
+- 可复用的上一轮证据路径
+- 当前边界：本轮只追一个最小差异
 
 ## 输出目录
 
@@ -65,7 +78,8 @@ round-N/
 │   ├── raw/
 │   └── extracts/
 ├── index.json
-└── verdict.md
+├── verdict.md
+└── result.json
 ```
 
 不允许只保留结论、不保留原始证据；也不允许只保留原始证据、不保留归一化结果。
@@ -249,6 +263,37 @@ round-N/
    - 已被后续轮替代，用 `SUPERSEDED`
 7. 如果还没闭环，就进入下一轮；下一轮必须明确继承或替代上一轮的哪些证据
 
+## 单轮执行边界
+
+- 一轮只解释一个最小差异
+- 一轮只生成一个 `round-N/`
+- 一轮结束后必须返回主流程
+- 是否继续下一轮由主流程决定
+
+## 返回协议
+
+每轮完成后必须写 `goal-rpc-loop/rpc-gap-loop/round-N/result.json`，至少包含：
+
+```json
+{
+  "phase": "rpc-gap-loop",
+  "status": "NEEDS_ANOTHER_ROUND",
+  "artifacts_written": [
+    "goal-rpc-loop/rpc-gap-loop/round-2/verdict.md",
+    "goal-rpc-loop/rpc-gap-loop/round-2/index.json"
+  ],
+  "key_findings": [
+    "已排除请求参数问题，当前更像配置未生效"
+  ],
+  "open_questions": [],
+  "shared_command_needed": "cds",
+  "next_recommendation": "cds",
+  "summary_input": [
+    "本轮已定位到配置层差异"
+  ]
+}
+```
+
 ## 轮次约束
 
 ### 只追一个最小差异
@@ -277,35 +322,23 @@ round-N/
 2. 将上一轮视为 `SUPERSEDED`
 3. 在新一轮中说明替代关系
 
+## 轮次约束
+
+- 主流程每次只派一轮 `rpc-gap-loop`
+- 如果本轮结论不足以关闭差异，返回 `NEEDS_ANOTHER_ROUND`
+- 如果本轮需要 shared 能力，返回 `NEEDS_SHARED_ACTION`
+- 如果本轮已足以说明最终结论，返回 `CLOSED`
+
 ## closeout.md 的职责
 
-只有当 gap 真正闭环后，才写 `closeout.md`。
-
-它负责汇总：
-
-1. 最终结论为什么是通过 / 不通过 / 阻塞
-2. 哪些轮次分别解决了什么问题
-3. 哪些轮次被 `SUPERSEDED`，为什么
-4. 哪些原始预期需要修正
-5. 哪些差异其实是预期差异，不是 bug
-6. 主流程在 `02-final-summary.md` 中应如何表述最终结论
-
-`closeout.md` 是跨轮汇总；单轮判断必须仍然写在各自的 `verdict.md` 中。
+只有当主流程已经确认 gap 不需要继续下一轮时，当前轮才补写 `closeout.md`，用于向主流程提供跨轮总结素材，而不是代替 `02-final-summary.md`
 
 ## 完成条件
 
-只有同时满足下面条件，才算 `rpc-gap-loop` 完成：
+只有同时满足下面条件，才算本轮 `rpc-gap-loop` 完成：
 
-1. 至少完成一轮 `round-N/`
-2. 每轮都落盘完整证据模型：
-   - `commands/`
-   - `requests/raw`、`requests/normalized`
-   - `responses/raw`、`responses/normalized`
-   - `logs/raw`、`logs/extracts`
-   - `index.json`
-   - `verdict.md`
-3. 每轮都显式标记唯一状态：`BLOCKED` / `FAIL` / `PASSED` / `SUPERSEDED`
-4. 已明确差异归因，或者已明确当前阻塞点
-5. 如存在多轮，轮次之间的继承 / 替代关系已写清楚
-6. 已把最终跨轮结论写到 `closeout.md`
-7. 主流程可以安全写 `02-final-summary.md`
+1. 已完成一个 `round-N/`
+2. 已落盘完整证据模型
+3. 已写出 `round-N/result.json`
+4. 已明确本轮唯一状态：`NEEDS_ANOTHER_ROUND` / `NEEDS_SHARED_ACTION` / `BLOCKED` / `CLOSED`
+5. 已把控制权交回主流程

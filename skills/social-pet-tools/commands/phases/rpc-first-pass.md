@@ -23,6 +23,16 @@
 - `goal-rpc-loop/rpc-goal-clarify/affected-rpcs.md`
 - `goal-rpc-loop/rpc-goal-clarify/request-derivation.md`
 
+## 主流程传入内容
+
+主流程在派发本阶段时，至少要给出：
+
+- 当前 session 路径
+- `rpc-goal-clarify/affected-rpcs.md`
+- `rpc-goal-clarify/request-derivation.md`
+- 当前最小目标：打出第一轮真实请求并拿到事实
+- 当前边界：第一轮先拿事实，不在本阶段做多轮归因
+
 ## 输出目录
 
 固定输出到：
@@ -32,7 +42,8 @@ goal-rpc-loop/rpc-first-pass/
 ├── requests/
 ├── responses/
 ├── logs/
-└── verdict.md
+├── verdict.md
+└── result.json
 ```
 
 ## 各目录职责
@@ -45,6 +56,8 @@ goal-rpc-loop/rpc-first-pass/
   - `log_id`、必要日志、补充链路信息
 - `verdict.md`
   - 第一轮判断：哪些通过、哪些未知、下一步往哪走
+- `result.json`
+  - 返回给主流程的结构化阶段结果
 
 ## 任务目标
 
@@ -65,12 +78,44 @@ goal-rpc-loop/rpc-first-pass/
    - `EXPECTED_DIFF`
    - `FAIL`
 
+## 首轮分流判断规则
+
+- 如果第一轮证据已足够证明结果符合预期，返回 `CLOSED`
+- 如果结果与预期存在差异，但可继续做最小归因，返回 `NEEDS_ANOTHER_ROUND`
+- 如果已确认需要日志、CDS 或 TCC 支持，返回 `NEEDS_SHARED_ACTION`
+- 如果请求无法继续执行，且暂无可行 shared 动作，返回 `BLOCKED`
+
+## 返回协议
+
+本阶段完成后必须写 `goal-rpc-loop/rpc-first-pass/result.json`，至少包含：
+
+```json
+{
+  "phase": "rpc-first-pass",
+  "status": "NEEDS_ANOTHER_ROUND",
+  "artifacts_written": [
+    "goal-rpc-loop/rpc-first-pass/verdict.md"
+  ],
+  "key_findings": [
+    "第一轮请求已打出，拿到了 req/resp/log_id"
+  ],
+  "open_questions": [
+    "差异是否由配置未生效导致"
+  ],
+  "shared_command_needed": "none",
+  "next_recommendation": "rpc-gap-loop",
+  "summary_input": [
+    "第一轮已完成，存在待解释差异"
+  ]
+}
+```
+
 ## 完成条件
 
 只有同时满足下面条件，才算 `rpc-first-pass` 完成：
 
 1. 第一轮关键请求都已落盘
 2. 每个请求都至少有 req / resp / `log_id`
-3. `verdict.md` 已明确写出下一步：
-   - 直接关闭
-   - 或进入 `rpc-gap-loop`
+3. `verdict.md` 已明确本轮观察结果
+4. `result.json` 已明确返回状态
+5. 是否关闭、是否进入下一轮、是否切 shared，均由主流程决定

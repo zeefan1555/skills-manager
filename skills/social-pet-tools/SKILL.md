@@ -192,6 +192,11 @@ social-pet-tools/
 - 用户只知道大概输入输出，希望你一步步推导请求并验证
 - 任务需要按“目标澄清 -> 第一轮执行 -> 差异闭环”推进
 
+补充说明：
+
+- `goal-rpc-loop` 由主流程统一判断阶段推进
+- `rpc-goal-clarify`、`rpc-first-pass`、`rpc-gap-loop` 作为被派发的阶段命令执行，阶段完成后返回主流程继续决策
+
 默认依赖的 phase 命令：
 
 - `rpc-goal-clarify`
@@ -242,6 +247,7 @@ social-pet-tools/
 
 - 请求已经基本清楚
 - 需要先打第一轮真实 RPC 看事实
+- 第一轮只负责拿事实，不直接吞掉后续多轮判断
 
 ### `rpc-gap-loop`
 
@@ -249,7 +255,7 @@ social-pet-tools/
 
 - 第一轮已执行
 - 当前结果与预期不一致
-- 需要 round-by-round 地继续归因、重试与关闭
+- 需要由主流程按 round-by-round 方式继续归因、重试与关闭
 
 ### `use-superpower`
 
