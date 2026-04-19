@@ -4,7 +4,7 @@
 >
 > **阶段命令**：`../phases/rpc-goal-clarify.md`、`../phases/rpc-first-pass.md`、`../phases/rpc-gap-loop.md`
 >
-> **可动态依赖的公有命令**：`../shared/rpc-pod-triage.md`、`../shared/cds.md`、`../shared/tcc.md`
+> **可动态依赖的公有命令**：`../shared/rpc-pod-triage.md`、`../shared/rpc-request-shape-check.md`、`../shared/cds.md`、`../shared/tcc.md`
 >
 > **参考资料**：`../../references/goal-rpc-loop-example.md`、`../../references/goal-rpc-loop-controller-contract.md`
 
@@ -28,7 +28,7 @@
 | rpc-goal-clarify              |
 | rpc-first-pass                |
 | rpc-gap-loop round-N          |
-| rpc-pod-triage / cds / tcc    |
+| rpc-pod-triage / rpc-request-shape-check / cds / tcc |
 +-------------------------------+
            |
            | 返回 result / 产物
@@ -85,7 +85,7 @@
 
 - `goal-rpc-loop` 永远持有下一跳决策权
 - `rpc-goal-clarify`、`rpc-first-pass`、`rpc-gap-loop` 只负责当前阶段执行
-- `rpc-pod-triage`、`cds`、`tcc` 是临时借用能力，执行后回到主流程
+- `rpc-pod-triage`、`rpc-request-shape-check`、`cds`、`tcc` 是临时借用能力，执行后回到主流程
 - phase worker 不得自行进入下一个 phase
 
 ## 主流程状态机
@@ -176,6 +176,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 每次读取阶段返回后，主流程必须先落盘当前态：先更新 `manifest.json`、追加 `controller-log.jsonl`、刷新 `03-progress.md`，再决定下一跳
 - `NEEDS_NEXT_PHASE` -> 进入下一阶段
 - `NEEDS_SHARED_ACTION` -> 先派 shared 命令
+- 当当前阻塞点是“请求形态是否正确”时，优先派 `rpc-request-shape-check`，不要直接跳到版本或日志排查
 - `NEEDS_ANOTHER_ROUND` -> 再派一轮 `rpc-gap-loop`
 - `BLOCKED` -> 主流程先停在 `BLOCKED`；只有显式决定结束本次会话时，才写 Final Summary 并进入 `CLOSED`
 - `CLOSED` -> 进入最终收口
@@ -247,7 +248,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 
 ## Shared 命令返回规则
 
-- `rpc-pod-triage`、`cds`、`tcc` 完成后，不直接决定下一 phase
+- `rpc-pod-triage`、`rpc-request-shape-check`、`cds`、`tcc` 完成后，不直接决定下一 phase
 - shared 只返回当前阻塞是否解除、证据路径和建议动作
 - 主流程必须重新判断是回到 `rpc-goal-clarify`、重跑 `rpc-first-pass` 还是继续 `rpc-gap-loop`
 
