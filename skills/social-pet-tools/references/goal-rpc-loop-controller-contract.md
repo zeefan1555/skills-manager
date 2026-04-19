@@ -81,6 +81,7 @@
 - `goal-rpc-loop.md` 负责把 `controller-log.jsonl`、`03-progress.md`、最终 summary 归并规则纳入主流程目录、初始化步骤、循环判断与完成条件
 - phase / shared 命令不直接写 `controller-log.jsonl`
 - shared 相关事件由 controller 在读取 shared 产物后归纳写入，不要求 shared 命令统一输出专用 `result.json`
+- `BLOCKED` 是运行时暂停态；只有主流程显式决定结束本次会话时，才把 `manifest.json.status` 转到 `CLOSED`，并以 `final_verdict=BLOCKED` 写最终总结和 `workflow_closed`
 
 ## Controller Log Common Envelope
 
@@ -247,7 +248,7 @@
   "controller_state": "CLOSED",
   "current_phase": "none",
   "final_status": "CLOSED",
-  "final_verdict": "MISMATCH_CONFIRMED",
+  "final_verdict": "BLOCKED",
   "closure_reason": "关键差异已经被复现并归因，最终总结已写出",
   "final_summary_path": "goal-rpc-loop/02-final-summary.md",
   "unresolved_items": [],
@@ -262,7 +263,7 @@
 | `NEEDS_NEXT_PHASE` | 派发下一阶段 |
 | `NEEDS_SHARED_ACTION` | 先派发指定 shared 命令，再回主流程重判 |
 | `NEEDS_ANOTHER_ROUND` | 再派一轮 `rpc-gap-loop` |
-| `BLOCKED` | 更新 `manifest.json.status=BLOCKED` 并停止推进 |
+| `BLOCKED` | 先更新 `manifest.json.status=BLOCKED` 并停止推进；若显式结束本次会话，再转 `CLOSED` 并写 Final Summary |
 | `CLOSED` | 写 `02-final-summary.md` 并关闭 |
 
 ## Gap Loop Boundary

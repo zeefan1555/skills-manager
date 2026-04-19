@@ -44,14 +44,14 @@
 | NEEDS_NEXT_PHASE / NEEDS_SHARED_ACTION        |
 | NEEDS_ANOTHER_ROUND / BLOCKED / CLOSED        |
 +----------------------------------------------+
-   |                     |                   |
-   | 继续派发下一跳        | 停在 BLOCKED       | 最终收口
-   |                     |                   |
-   |                     v                   v
-   |      +---------------------------+  +----------------------+
-   |      | manifest.status=BLOCKED   |  | 02-final-summary.md |
-   |      | 等待解除或显式收口        |  | workflow_closed     |
-   |      +---------------------------+  +----------------------+
+   |                     |                                |
+   | 继续派发下一跳        | 暂停等待解除                     | 最终收口
+   |                     |                                |
+   |                     v                                v
+   |      +---------------------------+       +----------------------+
+   |      | manifest.status=BLOCKED   |-----> | 02-final-summary.md |
+   |      | 可等待，或显式结束本次会话 |  显式收口 | workflow_closed     |
+   |      +---------------------------+       +----------------------+
    |                     ^
    +---------------------+
         未终止则继续循环判断
@@ -93,7 +93,7 @@
 - `INIT`：session 已创建，尚未派发阶段
 - `IN_PROGRESS`：主流程正在推进
 - `WAIT_SHARED`：当前需要先借用 shared 命令
-- `BLOCKED`：当前流程无法继续推进
+- `BLOCKED`：当前流程暂时无法继续推进，等待解除或由主流程显式结束本次会话
 - `CLOSED`：`02-final-summary.md` 已写完
 
 ## 强制目录规范
@@ -177,7 +177,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - `NEEDS_NEXT_PHASE` -> 进入下一阶段
 - `NEEDS_SHARED_ACTION` -> 先派 shared 命令
 - `NEEDS_ANOTHER_ROUND` -> 再派一轮 `rpc-gap-loop`
-- `BLOCKED` -> 主流程停在 `BLOCKED`
+- `BLOCKED` -> 主流程先停在 `BLOCKED`；只有显式决定结束本次会话时，才写 Final Summary 并进入 `CLOSED`
 - `CLOSED` -> 进入最终收口
 - `BLOCKED` 只表示当前轮无法继续推进，不等于已经关闭 workflow；只有显式决定本次就此收口时，才进入最终总结并追加 `workflow_closed`
 
@@ -221,7 +221,8 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - session 初始化完成后写 `session_initialized`；每次派发前后写 `phase_dispatched` / `shared_dispatched`，每次读取返回后写 `phase_returned` / `shared_returned`
 - 关键请求、响应、证据路径由主流程统一补写成 `request_observed` 事件，避免事实散落在各阶段正文中无法统一审计
 - controller 基于返回结果完成下一跳判断时，必须追加 `decision_made` 事件，并显式写出 `decision`、`why`、`current_hypothesis`、`alternatives_considered`、`next_action`
-- 写出或重写 `02-final-summary.md` 后追加 `final_summary_written`；只有 workflow 进入终止态时才追加 `workflow_closed`，其中显式收口的 `BLOCKED` 终态也写 `workflow_closed`，并将 `final_status` 记为 `BLOCKED`
+- 写出或重写 `02-final-summary.md` 后追加 `final_summary_written`；只有 workflow 进入终止态时才追加 `workflow_closed`
+- 若以阻塞结论显式结束本次会话，主流程仍应先从 `BLOCKED` 转入 `CLOSED`，再写 `workflow_closed`；此时 `final_verdict=BLOCKED`
 - 每条事件都要维护严格递增的 `sequence`，并带上当时的 `controller_state`、`current_phase`；`manifest.json` 只保留当前态，不替代完整日志
 
 ## Final Summary 归并规则
@@ -231,7 +232,9 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 归并时优先采用最近一条未被 `SUPERSEDED` 的证据链与轮次结论；旧轮次若已被推翻，只能作为背景，不得继续当成最终事实
 - 同一事实若同时出现在 phase 文档、shared 产物和主流程日志中，以带证据路径的主流程事件为准，并按证据路径去重
 - Final Summary 要明确区分：已确认结论、仍未解决问题、阻塞原因、后续建议，不把“当前猜测”写成“最终结论”
-- 只有在主流程确认状态为 `CLOSED` 或显式决定将 `BLOCKED` 作为本次终止态收口时，才允许写 Final Summary；写完后同步更新 `manifest.json.final_verdict` 与 `manifest.json.final_summary_ready`
+- 只有在主流程确认状态为 `CLOSED`，或显式决定以阻塞结论结束本次会话并把状态转到 `CLOSED` 时，才允许写 Final Summary
+- 若以阻塞结论结束，写 `manifest.json.final_verdict=BLOCKED`，同时把 `manifest.json.status` 从 `BLOCKED` 更新为 `CLOSED`
+- 写完后同步更新 `manifest.json.final_summary_ready`
 
 ## 进度板规则
 
