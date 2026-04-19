@@ -1,12 +1,15 @@
 # CDS Command
 
-> **引用规范**：`../references/conventions.md`、`../references/mapping.md`、`../references/env.md`
+> **命令类型**：`shared`
+>
+> **补充资料**：`../../references/env.md`
+>
+> **典型调用方**：`../workflows/goal-rpc-loop.md`、`../workflows/goal-code-loop.md`
 
 ## Trigger
 
 - `cds`
 - `modify`
-- `config-modify`
 - `cds modify`
 - “帮我改 cds 配置”
 - “帮我改一个 Excel 配置并提交”
