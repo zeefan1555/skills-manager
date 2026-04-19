@@ -8,6 +8,57 @@
 >
 > **参考资料**：`../../references/goal-rpc-loop-example.md`、`../../references/goal-rpc-loop-controller-contract.md`
 
+## 主控架构图
+
+```text
++----------------------+
+| 用户宏观 RPC 预期     |
++----------------------+
+           |
+           v
++-------------------------------+
+| goal-rpc-loop controller      |
+| 初始化 session / 恢复进度      |
++-------------------------------+
+           |
+           | 派发 phase / shared
+           v
++-------------------------------+
+| worker 执行当前单轮任务        |
+| rpc-goal-clarify              |
+| rpc-first-pass                |
+| rpc-gap-loop round-N          |
+| rpc-pod-triage / cds / tcc    |
++-------------------------------+
+           |
+           | 返回 result / 产物
+           v
++----------------------------------------------+
+| controller 读取返回并先落盘当前态              |
+| 更新 manifest / log / progress                |
++----------------------------------------------+
+           |
+           | 基于当前态分流
+           v
++----------------------------------------------+
+| NEEDS_NEXT_PHASE / NEEDS_SHARED_ACTION        |
+| NEEDS_ANOTHER_ROUND / BLOCKED / CLOSED        |
++----------------------------------------------+
+   |                     |                   |
+   | 继续派发下一跳        | 停在 BLOCKED       | 最终收口
+   |                     |                   |
+   |                     v                   v
+   |      +---------------------------+  +----------------------+
+   |      | manifest.status=BLOCKED   |  | 02-final-summary.md |
+   |      | 等待解除或显式收口        |  | workflow_closed     |
+   |      +---------------------------+  +----------------------+
+   |                     ^
+   +---------------------+
+        未终止则继续循环判断
+```
+
+主流程永远持有下一跳决策权；phase / shared 只执行当前任务，完成后必须返回主流程。
+
 ## 定位
 
 这是 `social-pet-tools` 下的主控 workflow。
@@ -55,7 +106,9 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 └── goal-rpc-loop/
     ├── 00-raw-expectation.md
     ├── 01-plan.md
+    ├── controller-log.jsonl
     ├── 02-final-summary.md
+    ├── 03-progress.md
     ├── rpc-goal-clarify/
     │   └── result.json
     ├── rpc-first-pass/
@@ -90,6 +143,8 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 创建 `docs/social-pet/<YYYY-MM-DD>-<topic>/`
 - 写入 `goal-rpc-loop/00-raw-expectation.md`
 - 写入 `goal-rpc-loop/01-plan.md`
+- 初始化 `goal-rpc-loop/controller-log.jsonl`
+- 初始化 `goal-rpc-loop/03-progress.md`
 - 初始化 `manifest.json`
 
 ### 第 2 步：恢复最近进度并判断当前阶段
@@ -97,9 +152,11 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 优先读取：
 
 1. `manifest.json`
-2. 最近一次 phase 的 `result.json`
-3. 最近一次 `rpc-gap-loop/round-*/result.json`
-4. `goal-rpc-loop/02-final-summary.md`
+2. `goal-rpc-loop/controller-log.jsonl`
+3. 最近一次 phase 的 `result.json`
+4. 最近一次 `rpc-gap-loop/round-*/result.json`
+5. `goal-rpc-loop/03-progress.md`
+6. `goal-rpc-loop/02-final-summary.md`
 
 ### 第 3 步：派发当前阶段命令
 
@@ -112,14 +169,17 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 主流程必须读取阶段目录下的 `result.json`
 - 若缺少 `result.json`，视为该阶段未完成
 - 阶段只能返回建议，不能替主流程决定下一跳
+- 主流程要把关键请求/响应观测补写为 `controller-log.jsonl` 的 `request_observed` 事件
 
 ### 第 5 步：依据阶段状态分流
 
+- 每次读取阶段返回后，主流程必须先落盘当前态：先更新 `manifest.json`、追加 `controller-log.jsonl`、刷新 `03-progress.md`，再决定下一跳
 - `NEEDS_NEXT_PHASE` -> 进入下一阶段
 - `NEEDS_SHARED_ACTION` -> 先派 shared 命令
 - `NEEDS_ANOTHER_ROUND` -> 再派一轮 `rpc-gap-loop`
 - `BLOCKED` -> 主流程停在 `BLOCKED`
 - `CLOSED` -> 进入最终收口
+- `BLOCKED` 只表示当前轮无法继续推进，不等于已经关闭 workflow；只有显式决定本次就此收口时，才进入最终总结并追加 `workflow_closed`
 
 ### 第 6 步：统一写最终总结
 
@@ -154,6 +214,34 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
   - `final_verdict`
   - `final_summary_ready`
 
+## 主流程日志规则
+
+- 主流程唯一过程账本是 `goal-rpc-loop/controller-log.jsonl`，格式为 JSON Lines，只允许按时间顺序追加，不允许回写历史事件
+- 只有 `goal-rpc-loop` controller 可以写 `controller-log.jsonl`；phase / shared worker 不直接写这份日志
+- session 初始化完成后写 `session_initialized`；每次派发前后写 `phase_dispatched` / `shared_dispatched`，每次读取返回后写 `phase_returned` / `shared_returned`
+- 关键请求、响应、证据路径由主流程统一补写成 `request_observed` 事件，避免事实散落在各阶段正文中无法统一审计
+- controller 基于返回结果完成下一跳判断时，必须追加 `decision_made` 事件，并显式写出 `decision`、`why`、`current_hypothesis`、`alternatives_considered`、`next_action`
+- 写出或重写 `02-final-summary.md` 后追加 `final_summary_written`；只有 workflow 进入终止态时才追加 `workflow_closed`，其中显式收口的 `BLOCKED` 终态也写 `workflow_closed`，并将 `final_status` 记为 `BLOCKED`
+- 每条事件都要维护严格递增的 `sequence`，并带上当时的 `controller_state`、`current_phase`；`manifest.json` 只保留当前态，不替代完整日志
+
+## Final Summary 归并规则
+
+- `goal-rpc-loop/02-final-summary.md` 只能由主流程写或重写，phase / shared worker 只能提供归并素材，不能直接落最终结论
+- 归并输入至少包括：`manifest.json` 当前态、`controller-log.jsonl`、最近有效的 phase `result.json`、shared 产物、`rpc-gap-loop` 各轮 `result.json`；若存在 `closeout.md`，可作为补充输入参与归并
+- 归并时优先采用最近一条未被 `SUPERSEDED` 的证据链与轮次结论；旧轮次若已被推翻，只能作为背景，不得继续当成最终事实
+- 同一事实若同时出现在 phase 文档、shared 产物和主流程日志中，以带证据路径的主流程事件为准，并按证据路径去重
+- Final Summary 要明确区分：已确认结论、仍未解决问题、阻塞原因、后续建议，不把“当前猜测”写成“最终结论”
+- 只有在主流程确认状态为 `CLOSED` 或显式决定将 `BLOCKED` 作为本次终止态收口时，才允许写 Final Summary；写完后同步更新 `manifest.json.final_verdict` 与 `manifest.json.final_summary_ready`
+
+## 进度板规则
+
+- `goal-rpc-loop/03-progress.md` 是给人读的当前态看板，不替代 `manifest.json` 和 `controller-log.jsonl`
+- 每次 `decision_made` 后至少更新一次；若主流程进入 `WAIT_SHARED`、`BLOCKED`、`CLOSED`，必须同步刷新
+- 进度板内容必须与 `manifest.json` 当前态一致，并能和 `controller-log.jsonl` 最近事件互相印证，禁止手写与日志脱节的平行叙事
+- `current hypothesis` 的唯一来源固定为 `manifest.json.current_hypothesis`；若最近一次 `decision_made` 更新了假设，必须先回写 `manifest.json`，再刷新进度板，禁止直接摘抄 phase 文档或自由改写
+- 允许覆盖重写，但至少保留这些块：当前 topic / session、controller status、current phase、current hypothesis、latest decision、next action、completed、open questions、key artifacts
+- 进度板应优先引用最近事件序号和关键产物路径，帮助下一位接手者快速定位证据，而不是复述长篇过程细节
+
 ## Shared 命令返回规则
 
 - `rpc-pod-triage`、`cds`、`tcc` 完成后，不直接决定下一 phase
@@ -183,5 +271,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 1. 已创建 session 目录并按规范落盘
 2. 已至少完成一个 phase worker，并生成对应 `result.json`
 3. 当前状态已明确为下一阶段、下一轮、shared 分支、阻塞或关闭
-4. `manifest.json.status` 已更新到最终状态
-5. `goal-rpc-loop/02-final-summary.md` 已由主流程统一写出
+4. `goal-rpc-loop/controller-log.jsonl` 已记录完整主流程关键事件
+5. `goal-rpc-loop/03-progress.md` 已与最近一次决策保持一致
+6. `manifest.json.status` 已更新到最终状态
+7. `goal-rpc-loop/02-final-summary.md` 已由主流程统一写出
