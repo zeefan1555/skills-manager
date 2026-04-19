@@ -55,6 +55,7 @@ social-pet-tools/
 │       ├── oncall.md
 │       ├── overpass.md
 │       ├── rpc-pod-triage.md
+│       ├── rpc-request-shape-check.md
 │       └── tcc.md
 └── references/
     ├── env.md
@@ -106,6 +107,7 @@ social-pet-tools/
 - `oncall`
 - `overpass`
 - `rpc-pod-triage`
+- `rpc-request-shape-check`
 - `tcc`
 
 ## 加载规则
@@ -206,6 +208,7 @@ social-pet-tools/
 运行过程中可动态依赖的 shared 命令：
 
 - `rpc-pod-triage`
+- `rpc-request-shape-check`
 - `cds`
 - `tcc`
 
@@ -320,6 +323,14 @@ social-pet-tools/
 - 已经有请求、回包或 `log_id`
 - 需要串起实例日志、Redis、Mongo 或下游状态来判断根因
 
+### `rpc-request-shape-check`
+
+适用于：
+
+- 需要先确认某个 RPC 请求体是否符合客户端真实上报态
+- 代码里同时存在客户端上报态和服务端存储态，容易把回包对象直接抄回请求
+- 回包不符合预期，但在怀疑服务端逻辑前要先排除请求构造错误
+
 ### `tcc`
 
 适用于：
@@ -343,6 +354,7 @@ social-pet-tools/
 | `oncall` | `commands/shared/oncall.md` |
 | `overpass` | `commands/shared/overpass.md` |
 | `rpc-pod-triage` | `commands/shared/rpc-pod-triage.md` |
+| `rpc-request-shape-check` | `commands/shared/rpc-request-shape-check.md` |
 | `tcc` | `commands/shared/tcc.md` |
 
 ## 语义路由
@@ -369,6 +381,9 @@ social-pet-tools/
 | “帮我改一个 WidgetCfg.xlsx / Excel 配置并提交” | `cds` |
 | “帮我改 TCC 并发布” | `tcc` |
 | “按 pod 日志链路排查这次请求” | `rpc-pod-triage` |
+| “先检查这个 RPC 请求是不是客户端上报态” | `rpc-request-shape-check` |
+| “按代码确认请求字段该怎么构造” | `rpc-request-shape-check` |
+| “别先怀疑服务端，先做请求形态校验” | `rpc-request-shape-check` |
 | “处理 social-pet oncall 事务” | `oncall` |
 | “把这次跑通的经验整理一下” | `archive` |
 | “生成一版回写候选补丁” | `archive` |
@@ -389,6 +404,7 @@ workflow 可以在执行过程中动态依赖 `shared/` 命令。
 示例：
 
 - `goal-rpc-loop` 发现是配置问题 -> 调 `cds` 或 `tcc`
+- `goal-rpc-loop` 发现需要先排除请求形态错误 -> 调 `rpc-request-shape-check`
 - `goal-rpc-loop` 发现需要日志链路定位 -> 调 `rpc-pod-triage`
 - `goal-code-loop` 发现依赖库缺字段 -> 调 `overpass`
 - `goal-code-loop` 改码后需要验证 -> 调 `local-test`
