@@ -14,6 +14,8 @@
 
 它不负责在 phase 内无限循环到结束。
 
+如果本轮发现当前最小差异已经明确属于某个 shared 能力，`rpc-gap-loop` 只负责把证据、判断依据和 `shared_command_needed` 写进 `result.json`，由主流程决定是否派发 `rpc-request-shape-check`、`scm-sha-check`、`rpc-pod-triage`、`cds` 或 `tcc`。
+
 本阶段关注的差异通常来自：
 
 1. 请求不对
@@ -51,7 +53,7 @@
 
 ## 输出目录
 
-固定输出到：
+固定输出到 controller 指定的 phase 目录；默认 session 相对路径为：
 
 ```text
 goal-rpc-loop/rpc-gap-loop/
@@ -60,6 +62,19 @@ goal-rpc-loop/rpc-gap-loop/
 ├── ...
 └── closeout.md
 ```
+
+主流程派发时必须同时传入：
+
+- 当前 session 绝对路径
+- 当前 phase 输出目录绝对路径
+- 当前 round 目录绝对路径
+- 允许写入的白名单根目录
+
+硬约束：
+
+- 本阶段所有产物必须直接写入指定 `round-N/` 目录
+- 不允许先写到 session 外再搬回
+- 若产物未落到指定目录，视为本轮未完成
 
 每个 `round-N/` 必须是一个**自解释证据快照**，至少包含：
 
@@ -251,17 +266,13 @@ round-N/
    - `logs/raw` 与 `logs/extracts`
    - `index.json`
    - `verdict.md`
-5. 必要时动态调用：
-   - `rpc-pod-triage`
-   - `cds`
-   - `tcc`
-   - 其他能直接验证当前最小假设的工具
+5. 如果当前最小差异已经明确属于 shared 能力，就在 `result.json` 返回 `NEEDS_SHARED_ACTION` 与 `shared_command_needed`，不要在 phase 内直接吞掉控制权
 6. 为本轮给出唯一状态：
    - 已被外部阻塞，用 `BLOCKED`
    - 已证明当前行为失败，用 `FAIL`
    - 已证明差异闭环，用 `PASSED`
    - 已被后续轮替代，用 `SUPERSEDED`
-7. 如果还没闭环，就进入下一轮；下一轮必须明确继承或替代上一轮的哪些证据
+7. 如果还没闭环，就在返回里明确下一轮应继承或替代上一轮的哪些证据，由主流程决定是否继续下一轮
 
 ## 单轮执行边界
 
@@ -269,6 +280,19 @@ round-N/
 - 一轮只生成一个 `round-N/`
 - 一轮结束后必须返回主流程
 - 是否继续下一轮由主流程决定
+## Shared 分流规则
+
+当 `rpc-gap-loop` 发现本轮最小差异已经明确属于某个 shared 能力时，只返回建议，不在 phase 内直接把 shared 跑完。
+
+优先分流规则：
+
+- 当前阻塞点是“请求 shape 是否正确”时，优先返回 `shared_command_needed=rpc-request-shape-check`，不要直接跳到版本或日志排查
+- 当前阻塞点是“线上实例当前版本是否真的包含本地代码”时，优先返回 `shared_command_needed=scm-sha-check`，不要一上来就把现象归因到代码未生效
+- 当前已经有请求、回包或 `log_id`，并且需要运行时事实来解释差异时，返回 `shared_command_needed=rpc-pod-triage`
+- 当前差异已明确落在配置或开关时，返回 `shared_command_needed=cds` 或 `shared_command_needed=tcc`
+
+phase 在这里给出的只是共享能力建议，不是下一阶段决定。主流程仍需根据 shared 结果重新判断是回到 `rpc-first-pass`、继续 `rpc-gap-loop`，还是进入其他收口路径。
+
 
 ## 返回协议
 
@@ -277,17 +301,24 @@ round-N/
 ```json
 {
   "phase": "rpc-gap-loop",
-  "status": "NEEDS_ANOTHER_ROUND",
+  "session_root": "docs/social-pet/<YYYY-MM-DD>-<topic>",
+  "phase_output_dir": "goal-rpc-loop/rpc-gap-loop/round-2",
+  "status": "NEEDS_SHARED_ACTION",
   "artifacts_written": [
     "goal-rpc-loop/rpc-gap-loop/round-2/verdict.md",
     "goal-rpc-loop/rpc-gap-loop/round-2/index.json"
   ],
+  "acceptance_inputs": [],
+  "evidence_links": [],
   "key_findings": [
     "已排除请求参数问题，当前更像配置未生效"
   ],
   "open_questions": [],
+  "protocol_check": {
+    "all_artifacts_under_session": true
+  },
   "shared_command_needed": "cds",
-  "next_recommendation": "cds",
+  "next_recommendation": "请主流程先派发 cds，再根据 shared 结果决定是否继续 rpc-gap-loop",
   "summary_input": [
     "本轮已定位到配置层差异"
   ]
@@ -301,6 +332,7 @@ round-N/
 每一轮只解决一个最小问题，例如：
 
 - “是不是请求参数不对”
+- “是不是线上实例版本还没带上这次代码”
 - “是不是依赖配置没生效”
 - “是不是服务端状态没落库”
 
@@ -326,12 +358,12 @@ round-N/
 
 - 主流程每次只派一轮 `rpc-gap-loop`
 - 如果本轮结论不足以关闭差异，返回 `NEEDS_ANOTHER_ROUND`
-- 如果本轮需要 shared 能力，返回 `NEEDS_SHARED_ACTION`
+- 如果本轮需要 shared 能力，返回 `NEEDS_SHARED_ACTION`，并显式写出 `shared_command_needed`
 - 如果本轮已足以说明最终结论，返回 `CLOSED`
 
 ## closeout.md 的职责
 
-只有当主流程已经确认 gap 不需要继续下一轮时，当前轮才补写 `closeout.md`，用于向主流程提供跨轮总结素材，而不是代替 `02-final-summary.md`
+只有当主流程已经确认 gap 不需要继续下一轮时，当前轮才补写 `closeout.md`，用于向主流程提供跨轮总结素材，而不是代替 `03-final-summary.md` 或 `04-acceptance.md`
 
 ## 完成条件
 

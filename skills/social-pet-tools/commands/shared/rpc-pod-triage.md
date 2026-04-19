@@ -98,6 +98,18 @@
 docs/social-pet/<date-topic>/rpc-pod-triage/
 ```
 
+主流程派发 shared 前必须显式传入：
+
+- 当前 session 绝对路径
+- 当前 shared 输出目录绝对路径
+- 允许写入的白名单根目录
+
+硬约束：
+
+- 所有产物必须直接写入当前 session 的 `rpc-pod-triage/`
+- 不允许先写到 session 外再搬回
+- 若已验证到关键断言，必须通过结构化字段回传给 controller，而不是只写自然语言
+
 `verdict.md` 至少包括：
 
 - 请求文件路径
@@ -109,6 +121,30 @@ docs/social-pet/<date-topic>/rpc-pod-triage/
 - 一句话结论
 - 下一步建议
 
+如果本命令需要把结果回交 `goal-rpc-loop` controller，建议补一份结构化结果，至少包含：
+
+```json
+{
+  "shared_command": "rpc-pod-triage",
+  "blocking_cleared": true,
+  "key_evidence": [
+    "rpc-pod-triage/logid-full.txt"
+  ],
+  "recommended_return_phase": "rpc-first-pass",
+  "acceptance_inputs": [
+    {
+      "assertion_id": "assert-example",
+      "assertion_text": "示例断言",
+      "status": "PASS",
+      "evidence": [
+        "file:///absolute/path/to/logid-full.txt#L40-L42"
+      ],
+      "notes": ""
+    }
+  ]
+}
+```
+
 ## 收口规则
 
 只有同时满足以下条件，才算本命令完成：
@@ -118,3 +154,4 @@ docs/social-pet/<date-topic>/rpc-pod-triage/
 - 已给出实例日志层面的事实判断
 - 如有需要，已补充 Mongo / Redis / 下游证据
 - 已输出单次 bundle 路径和一句话根因
+- 若已命中用户关心的运行时断言，已通过 `acceptance_inputs` 把证据回填给 controller

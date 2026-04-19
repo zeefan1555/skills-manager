@@ -56,6 +56,7 @@ social-pet-tools/
 │       ├── overpass.md
 │       ├── rpc-pod-triage.md
 │       ├── rpc-request-shape-check.md
+│       ├── scm-sha-check.md
 │       └── tcc.md
 └── references/
     ├── env.md
@@ -108,6 +109,7 @@ social-pet-tools/
 - `overpass`
 - `rpc-pod-triage`
 - `rpc-request-shape-check`
+- `scm-sha-check`
 - `tcc`
 
 ## 加载规则
@@ -209,6 +211,7 @@ social-pet-tools/
 
 - `rpc-pod-triage`
 - `rpc-request-shape-check`
+- `scm-sha-check`
 - `cds`
 - `tcc`
 
@@ -331,6 +334,14 @@ social-pet-tools/
 - 代码里同时存在客户端上报态和服务端存储态，容易把回包对象直接抄回请求
 - 回包不符合预期，但在怀疑服务端逻辑前要先排除请求构造错误
 
+### `scm-sha-check`
+
+适用于：
+
+- 需要先确认线上命中实例的发布版本是否真的包含当前本地代码
+- 已经拿到 cluster / deployment / version，需要继续核对 SCM version 与 base_commit_hash
+- 在怀疑“部署没生效”前，先把实例版本和本地 HEAD 的关系核实清楚
+
 ### `tcc`
 
 适用于：
@@ -355,6 +366,7 @@ social-pet-tools/
 | `overpass` | `commands/shared/overpass.md` |
 | `rpc-pod-triage` | `commands/shared/rpc-pod-triage.md` |
 | `rpc-request-shape-check` | `commands/shared/rpc-request-shape-check.md` |
+| `scm-sha-check` | `commands/shared/scm-sha-check.md` |
 | `tcc` | `commands/shared/tcc.md` |
 
 ## 语义路由
@@ -384,6 +396,9 @@ social-pet-tools/
 | “先检查这个 RPC 请求是不是客户端上报态” | `rpc-request-shape-check` |
 | “按代码确认请求字段该怎么构造” | `rpc-request-shape-check` |
 | “别先怀疑服务端，先做请求形态校验” | `rpc-request-shape-check` |
+| “先核对线上版本里有没有这次提交” | `scm-sha-check` |
+| “帮我检查实例 version 对应的 base_commit_hash” | `scm-sha-check` |
+| “先别猜部署没生效，先做 SCM SHA 核对” | `scm-sha-check` |
 | “处理 social-pet oncall 事务” | `oncall` |
 | “把这次跑通的经验整理一下” | `archive` |
 | “生成一版回写候选补丁” | `archive` |
@@ -405,6 +420,7 @@ workflow 可以在执行过程中动态依赖 `shared/` 命令。
 
 - `goal-rpc-loop` 发现是配置问题 -> 调 `cds` 或 `tcc`
 - `goal-rpc-loop` 发现需要先排除请求形态错误 -> 调 `rpc-request-shape-check`
+- `goal-rpc-loop` 发现需要先确认线上版本是否真的包含当前代码 -> 调 `scm-sha-check`
 - `goal-rpc-loop` 发现需要日志链路定位 -> 调 `rpc-pod-triage`
 - `goal-code-loop` 发现依赖库缺字段 -> 调 `overpass`
 - `goal-code-loop` 改码后需要验证 -> 调 `local-test`

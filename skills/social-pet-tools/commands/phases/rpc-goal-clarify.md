@@ -37,7 +37,7 @@
 
 ## 输出目录
 
-固定输出到：
+固定输出到 controller 指定的 phase 目录；默认 session 相对路径为：
 
 ```text
 goal-rpc-loop/rpc-goal-clarify/
@@ -47,6 +47,18 @@ goal-rpc-loop/rpc-goal-clarify/
 ├── open-questions.md
 └── result.json
 ```
+
+主流程派发时必须同时传入：
+
+- 当前 session 绝对路径
+- 当前 phase 输出目录绝对路径
+- 允许写入的白名单根目录
+
+硬约束：
+
+- 本阶段所有产物必须直接写入指定 phase 目录
+- 不允许先写到 session 外再搬回
+- 若产物未落到指定 phase 目录，视为阶段未完成
 
 ## 各文件职责
 
@@ -87,15 +99,22 @@ goal-rpc-loop/rpc-goal-clarify/
 ```json
 {
   "phase": "rpc-goal-clarify",
+  "session_root": "docs/social-pet/<YYYY-MM-DD>-<topic>",
+  "phase_output_dir": "goal-rpc-loop/rpc-goal-clarify",
   "status": "NEEDS_NEXT_PHASE",
   "artifacts_written": [
     "goal-rpc-loop/rpc-goal-clarify/affected-rpcs.md",
     "goal-rpc-loop/rpc-goal-clarify/request-derivation.md"
   ],
+  "acceptance_inputs": [],
+  "evidence_links": [],
   "key_findings": [
     "已识别第一轮最小请求候选"
   ],
   "open_questions": [],
+  "protocol_check": {
+    "all_artifacts_under_session": true
+  },
   "shared_command_needed": "none",
   "next_recommendation": "rpc-first-pass",
   "summary_input": [

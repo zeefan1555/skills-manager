@@ -71,14 +71,14 @@
 - `manifest.json` 保存当前态，不负责保留完整历史
 - `result.json` 保存单个 worker 的阶段返回，不负责串联整个主流程因果链
 - `controller-log.jsonl` 负责记录 controller 的派发、返回、请求观测、决策与关闭过程
-- `03-progress.md` 与 `02-final-summary.md` 都应优先基于 `controller-log.jsonl` 和对应产物归并生成
+- `02-progress.md`、`03-final-summary.md` 与 `04-acceptance.md` 都应优先基于 `controller-log.jsonl` 和对应产物归并生成
 - 所有关键请求观测都由主流程补写为 `request_observed` 事件，避免散落在 phase 文档里难以统一审计
 
 ## Workflow Integration Note
 
 本文件只定义 controller 事件协议与进度板模板。
 
-- `goal-rpc-loop.md` 负责把 `controller-log.jsonl`、`03-progress.md`、最终 summary 归并规则纳入主流程目录、初始化步骤、循环判断与完成条件
+- `goal-rpc-loop.md` 负责把 `controller-log.jsonl`、`02-progress.md`、`03-final-summary.md`、`04-acceptance.md` 的归并规则纳入主流程目录、初始化步骤、循环判断与完成条件
 - phase / shared 命令不直接写 `controller-log.jsonl`
 - shared 相关事件由 controller 在读取 shared 产物后归纳写入，不要求 shared 命令统一输出专用 `result.json`
 - `BLOCKED` 是运行时暂停态；只有主流程显式决定结束本次会话时，才把 `manifest.json.status` 转到 `CLOSED`，并以 `final_verdict=BLOCKED` 写最终总结和 `workflow_closed`
@@ -120,8 +120,9 @@
 | `shared_returned` | shared worker 产物已被 controller 读取后 | `shared_command`, `artifact_paths`, `controller_observation`, `unblocked` |
 | `request_observed` | 主流程确认某个 RPC 请求/响应证据被新观测到后 | `source_kind`, `source_worker`, `request_name`, `observation`, `evidence_paths` |
 | `decision_made` | controller 基于阶段结果或请求观测完成一次下一跳判断后 | `decision`, `why`, `alternatives_considered`, `next_action` |
-| `final_summary_written` | `02-final-summary.md` 写出或重写后 | `summary_path`, `final_verdict` |
-| `workflow_closed` | controller 将 `manifest.json.status` 收敛到最终态后 | `final_status`, `closure_reason`, `final_summary_path` |
+| `final_summary_written` | `03-final-summary.md` 写出或重写后 | `summary_path`, `final_verdict` |
+| `acceptance_written` | `04-acceptance.md` 写出或重写后 | `acceptance_path`, `assertion_count`, `final_verdict` |
+| `workflow_closed` | controller 将 `manifest.json.status` 收敛到最终态后 | `final_status`, `closure_reason`, `final_summary_path`, `acceptance_path` |
 
 ## Event Templates
 
@@ -164,9 +165,14 @@
   "phase": "rpc-first-pass",
   "result_path": "goal-rpc-loop/rpc-first-pass/result.json",
   "result_status": "NEEDS_ANOTHER_ROUND",
+  "phase_output_dir": "goal-rpc-loop/rpc-first-pass",
   "artifacts_written": [
     "goal-rpc-loop/rpc-first-pass/result.json"
   ],
+  "protocol_check": {
+    "all_artifacts_under_session": true
+  },
+  "acceptance_inputs_count": 1,
   "key_findings": [
     "首次调用返回与目标预期不一致"
   ],
@@ -250,11 +256,43 @@
   "final_status": "CLOSED",
   "final_verdict": "BLOCKED",
   "closure_reason": "关键差异已经被复现并归因，最终总结已写出",
-  "final_summary_path": "goal-rpc-loop/02-final-summary.md",
+  "final_summary_path": "goal-rpc-loop/03-final-summary.md",
+  "acceptance_path": "goal-rpc-loop/04-acceptance.md",
   "unresolved_items": [],
   "followup_recommendation": "若需修复，进入独立改动任务，不在本 workflow 内继续循环"
 }
 ```
+
+## Phase Result Template Extension
+
+phase / shared 若要参与最终验收归并，必须在 `result.json` 中提供：
+
+```json
+{
+  "session_root": "docs/social-pet/<YYYY-MM-DD>-<topic>",
+  "phase_output_dir": "goal-rpc-loop/rpc-first-pass",
+  "evidence_links": [
+    "file:///absolute/path/to/file#L34-L39"
+  ],
+  "acceptance_inputs": [
+    {
+      "assertion_id": "assert-no-daily-post-info",
+      "assertion_text": "响应不返回 DailyPostInfo",
+      "status": "PASS",
+      "evidence": [
+        "file:///absolute/path/to/response.json#L12-L18"
+      ],
+      "notes": "首轮真实回包已验证"
+    }
+  ]
+}
+```
+
+约束：
+
+- `acceptance_inputs` 只提供素材，不直接写最终验收文档
+- 每条 `PASS` / `FAIL` / `UNKNOWN` 断言都必须至少带 1 条行级链接
+- controller 负责把这些素材归并到 `acceptance-manifest.json` 与 `04-acceptance.md`
 
 ## Controller Decision Rules
 
@@ -264,7 +302,7 @@
 | `NEEDS_SHARED_ACTION` | 先派发指定 shared 命令，再回主流程重判 |
 | `NEEDS_ANOTHER_ROUND` | 再派一轮 `rpc-gap-loop` |
 | `BLOCKED` | 先更新 `manifest.json.status=BLOCKED` 并停止推进；若显式结束本次会话，再转 `CLOSED` 并写 Final Summary |
-| `CLOSED` | 写 `02-final-summary.md` 并关闭 |
+| `CLOSED` | 写 `03-final-summary.md`、`04-acceptance.md` 并关闭 |
 
 ## Gap Loop Boundary
 
@@ -273,9 +311,9 @@
 - 完成后必须写 `round-N/result.json`
 - 不允许在 phase 内自己无限循环到结束
 
-## `03-progress.md` Template
+## `02-progress.md` Template
 
-`03-progress.md` 是给人读的进度看板，不替代 `controller-log.jsonl`。它应从最近事件中提炼当前态、下一步和风险，而不是手写一份与日志脱节的叙述。
+`02-progress.md` 是给人读的进度看板，不替代 `controller-log.jsonl`。它应从最近事件中提炼当前态、下一步和风险，而不是手写一份与日志脱节的叙述。
 
 更新规则：
 

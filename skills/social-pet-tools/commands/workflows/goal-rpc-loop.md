@@ -4,7 +4,7 @@
 >
 > **阶段命令**：`../phases/rpc-goal-clarify.md`、`../phases/rpc-first-pass.md`、`../phases/rpc-gap-loop.md`
 >
-> **可动态依赖的公有命令**：`../shared/rpc-pod-triage.md`、`../shared/rpc-request-shape-check.md`、`../shared/cds.md`、`../shared/tcc.md`
+> **可动态依赖的公有命令**：`../shared/rpc-pod-triage.md`、`../shared/rpc-request-shape-check.md`、`../shared/scm-sha-check.md`、`../shared/cds.md`、`../shared/tcc.md`
 >
 > **参考资料**：`../../references/goal-rpc-loop-example.md`、`../../references/goal-rpc-loop-controller-contract.md`
 
@@ -36,6 +36,7 @@
 | 动态调用 shared subagent         |
 | rpc-pod-triage /                 |
 | rpc-request-shape-check /        |
+| scm-sha-check /                  |
 | cds / tcc                        |
 +----------------------------------+
           |
@@ -56,23 +57,24 @@
           v
 +----------------------------------+
 | controller-log.jsonl             |
-| 03-progress.md                   |
+| 02-progress.md                   |
 +----------------------------------+
           |
           | 决定下一轮 / 下一阶段 / 收口
           v
 +----------------------------------+
 | goal-rpc-loop 主 Agent           |
-| 继续派发，或写 Final Summary      |
+| 继续派发，或写 Final + Acceptance |
 +----------------------------------+
           |
           v
 +----------------------------------+
-| 02-final-summary.md              |
+| 03-final-summary.md              |
+| 04-acceptance.md                 |
 +----------------------------------+
 ```
 
-每一轮结束后，主 Agent 必须先把当前返回结果写入 `controller-log.jsonl` 和 `03-progress.md`，再决定是否进入下一轮、下一阶段或最终收口。
+每一轮结束后，主 Agent 必须先把当前返回结果写入 `controller-log.jsonl` 和 `02-progress.md`，再决定是否进入下一轮、下一阶段或最终收口。
 
 ## 定位
 
@@ -84,7 +86,7 @@
 2. 判断当前应进入哪个阶段
 3. 派发 phase / shared 命令
 4. 读取各阶段 `result.json` 并决定下一跳
-5. 在真正闭环后统一写入 `02-final-summary.md`
+5. 在真正闭环后统一写入 `03-final-summary.md` 与 `04-acceptance.md`
 
 ## 适用场景
 
@@ -100,7 +102,7 @@
 
 - `goal-rpc-loop` 永远持有下一跳决策权
 - `rpc-goal-clarify`、`rpc-first-pass`、`rpc-gap-loop` 只负责当前阶段执行
-- `rpc-pod-triage`、`rpc-request-shape-check`、`cds`、`tcc` 是临时借用能力，执行后回到主流程
+- `rpc-pod-triage`、`rpc-request-shape-check`、`scm-sha-check`、`cds`、`tcc` 是临时借用能力，执行后回到主流程
 - phase worker 不得自行进入下一个 phase
 
 ## 主流程状态机
@@ -109,7 +111,7 @@
 - `IN_PROGRESS`：主流程正在推进
 - `WAIT_SHARED`：当前需要先借用 shared 命令
 - `BLOCKED`：当前流程暂时无法继续推进，等待解除或由主流程显式结束本次会话
-- `CLOSED`：`02-final-summary.md` 已写完
+- `CLOSED`：`03-final-summary.md` 与 `04-acceptance.md` 已写完
 
 ## 强制目录规范
 
@@ -122,8 +124,10 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
     ├── 00-raw-expectation.md
     ├── 01-plan.md
     ├── controller-log.jsonl
-    ├── 02-final-summary.md
-    ├── 03-progress.md
+    ├── 02-progress.md
+    ├── 03-final-summary.md
+    ├── 04-acceptance.md
+    ├── acceptance-manifest.json
     ├── rpc-goal-clarify/
     │   └── result.json
     ├── rpc-first-pass/
@@ -143,7 +147,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 最近同类目标的 `manifest.json`
 - 最近一次可复用 round 的 `index.json`
 - 最近一次可复用 round 的 `commands/`、`requests/`、`responses/`、`verdict.md`
-- 最近一次 `02-final-summary.md` 里的收敛结论
+- 最近一次 `03-final-summary.md` 里的收敛结论
 - `references/recent-command-reuse.md`
 
 复用时要遵守：
@@ -158,9 +162,24 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 创建 `docs/social-pet/<YYYY-MM-DD>-<topic>/`
 - 写入 `goal-rpc-loop/00-raw-expectation.md`
 - 写入 `goal-rpc-loop/01-plan.md`
+- 初始化 `goal-rpc-loop/02-progress.md`
 - 初始化 `goal-rpc-loop/controller-log.jsonl`
-- 初始化 `goal-rpc-loop/03-progress.md`
+- 初始化 `goal-rpc-loop/acceptance-manifest.json`
 - 初始化 `manifest.json`
+- 不预创建 `goal-rpc-loop/03-final-summary.md` 与 `goal-rpc-loop/04-acceptance.md`
+
+### 第 1.5 步：建立自动化与路径硬约束
+
+- controller 派发任何 phase / shared worker 前，必须显式传入：
+  - 当前 session 绝对路径
+  - workflow 根目录绝对路径
+  - 当前 worker 指定输出目录绝对路径
+  - 允许写入的白名单根目录
+  - 当前最小目标
+  - 当前边界
+- worker 只允许把产物写到当前 session 白名单目录内，不允许先写到 session 外再搬回
+- 禁止依赖需要 Trash / 弹窗 / 人工确认的删除、移动、重命名步骤
+- 优先策略固定为：直接写目标目录 > 安全创建目录 > 覆盖式更新文件
 
 ### 第 2 步：恢复最近进度并判断当前阶段
 
@@ -170,8 +189,9 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 2. `goal-rpc-loop/controller-log.jsonl`
 3. 最近一次 phase 的 `result.json`
 4. 最近一次 `rpc-gap-loop/round-*/result.json`
-5. `goal-rpc-loop/03-progress.md`
-6. `goal-rpc-loop/02-final-summary.md`
+5. `goal-rpc-loop/02-progress.md`
+6. `goal-rpc-loop/03-final-summary.md`
+7. `goal-rpc-loop/04-acceptance.md`
 
 ### 第 3 步：派发当前阶段命令
 
@@ -183,15 +203,23 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 
 - 主流程必须读取阶段目录下的 `result.json`
 - 若缺少 `result.json`，视为该阶段未完成
+- 主流程必须先校验 `result.json` 里的输出路径契约，再做业务判断：
+  - `phase_output_dir` 必须位于当前 session 内
+  - `artifacts_written` 中每个产物都必须存在
+  - `artifacts_written` 中每个产物都必须位于当前 session 内
+  - 若存在 `evidence_links`，链接目标必须存在
+- 若 worker 产物不在当前 session 内，视为协议违约；主流程不得通过人工 `mv` / `rm` 修补，而应判定该轮未完成并要求重跑
 - 阶段只能返回建议，不能替主流程决定下一跳
 - 主流程要把关键请求/响应观测补写为 `controller-log.jsonl` 的 `request_observed` 事件
+- 主流程还要把阶段返回的 `acceptance_inputs` 归并进 `goal-rpc-loop/acceptance-manifest.json`
 
 ### 第 5 步：依据阶段状态分流
 
-- 每次读取阶段返回后，主流程必须先落盘当前态：先更新 `manifest.json`、追加 `controller-log.jsonl`、刷新 `03-progress.md`，再决定下一跳
+- 每次读取阶段返回后，主流程必须先落盘当前态：先更新 `manifest.json`、追加 `controller-log.jsonl`、刷新 `02-progress.md`、归并 `acceptance-manifest.json`，再决定下一跳
 - `NEEDS_NEXT_PHASE` -> 进入下一阶段
 - `NEEDS_SHARED_ACTION` -> 先派 shared 命令
 - 当当前阻塞点是“请求形态是否正确”时，优先派 `rpc-request-shape-check`，不要直接跳到版本或日志排查
+- 当当前阻塞点是“线上实例当前版本是否真的包含本地代码”时，优先派 `scm-sha-check`，不要一上来就把现象归因到代码未生效
 - `NEEDS_ANOTHER_ROUND` -> 再派一轮 `rpc-gap-loop`
 - `BLOCKED` -> 主流程先停在 `BLOCKED`；只有显式决定结束本次会话时，才写 Final Summary 并进入 `CLOSED`
 - `CLOSED` -> 进入最终收口
@@ -199,7 +227,30 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 
 ### 第 6 步：统一写最终总结
 
-只有主流程可以写 `goal-rpc-loop/02-final-summary.md`
+只有主流程可以写：
+
+- `goal-rpc-loop/03-final-summary.md`
+- `goal-rpc-loop/04-acceptance.md`
+
+其中：
+
+- `03-final-summary.md` 面向 controller 结论归并
+- `04-acceptance.md` 面向用户人工验收，必须按断言组织证据
+
+### 第 7 步：生成可验收文档
+
+- 主流程必须从 `acceptance-manifest.json` 自动归并 `04-acceptance.md`
+- `04-acceptance.md` 至少包含：
+  - 验收目标
+  - 环境与调用入口
+  - 关键请求文件链接
+  - 关键响应文件链接
+  - 关键日志文件链接
+  - 断言清单
+  - 每条断言的 `PASS` / `FAIL` / `UNKNOWN`
+  - 每条断言至少 1 条可点击的行级证据链接
+  - 一句话验收结论
+- 不允许只写“见某文件”；至少一条证据必须能跳转到 `file:///absolute/path#Lx-Ly`
 
 ## 最近进度参考规则
 
@@ -210,7 +261,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 1. 最近一次同主题 session 的 `manifest.json`
 2. 最近一次已完成阶段的产物目录
 3. 最近一次可复用 round 的 `index.json` 与 `verdict.md`
-4. 最近一次 `02-final-summary.md`
+4. 最近一次 `03-final-summary.md`
 
 参考时要做到：
 
@@ -237,13 +288,13 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - session 初始化完成后写 `session_initialized`；每次派发前后写 `phase_dispatched` / `shared_dispatched`，每次读取返回后写 `phase_returned` / `shared_returned`
 - 关键请求、响应、证据路径由主流程统一补写成 `request_observed` 事件，避免事实散落在各阶段正文中无法统一审计
 - controller 基于返回结果完成下一跳判断时，必须追加 `decision_made` 事件，并显式写出 `decision`、`why`、`current_hypothesis`、`alternatives_considered`、`next_action`
-- 写出或重写 `02-final-summary.md` 后追加 `final_summary_written`；只有 workflow 进入终止态时才追加 `workflow_closed`
+- 写出或重写 `03-final-summary.md` 后追加 `final_summary_written`；写出或重写 `04-acceptance.md` 后追加 `acceptance_written`；只有 workflow 进入终止态时才追加 `workflow_closed`
 - 若以阻塞结论显式结束本次会话，主流程仍应先从 `BLOCKED` 转入 `CLOSED`，再写 `workflow_closed`；此时 `final_verdict=BLOCKED`
 - 每条事件都要维护严格递增的 `sequence`，并带上当时的 `controller_state`、`current_phase`；`manifest.json` 只保留当前态，不替代完整日志
 
 ## Final Summary 归并规则
 
-- `goal-rpc-loop/02-final-summary.md` 只能由主流程写或重写，phase / shared worker 只能提供归并素材，不能直接落最终结论
+- `goal-rpc-loop/03-final-summary.md` 与 `goal-rpc-loop/04-acceptance.md` 只能由主流程写或重写，phase / shared worker 只能提供归并素材，不能直接落最终结论
 - 归并输入至少包括：`manifest.json` 当前态、`controller-log.jsonl`、最近有效的 phase `result.json`、shared 产物、`rpc-gap-loop` 各轮 `result.json`；若存在 `closeout.md`，可作为补充输入参与归并
 - 归并时优先采用最近一条未被 `SUPERSEDED` 的证据链与轮次结论；旧轮次若已被推翻，只能作为背景，不得继续当成最终事实
 - 同一事实若同时出现在 phase 文档、shared 产物和主流程日志中，以带证据路径的主流程事件为准，并按证据路径去重
@@ -251,10 +302,12 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 - 只有在主流程确认状态为 `CLOSED`，或显式决定以阻塞结论结束本次会话并把状态转到 `CLOSED` 时，才允许写 Final Summary
 - 若以阻塞结论结束，写 `manifest.json.final_verdict=BLOCKED`，同时把 `manifest.json.status` 从 `BLOCKED` 更新为 `CLOSED`
 - 写完后同步更新 `manifest.json.final_summary_ready`
+- `04-acceptance.md` 必须从 `acceptance-manifest.json` 归并，不得手写脱离证据的断言结果
+- `04-acceptance.md` 中每条断言都必须至少带 1 条行级链接，格式为 `file:///absolute/path/to/file#L34-L39`
 
 ## 进度板规则
 
-- `goal-rpc-loop/03-progress.md` 是给人读的当前态看板，不替代 `manifest.json` 和 `controller-log.jsonl`
+- `goal-rpc-loop/02-progress.md` 是给人读的当前态看板，不替代 `manifest.json` 和 `controller-log.jsonl`
 - 每次 `decision_made` 后至少更新一次；若主流程进入 `WAIT_SHARED`、`BLOCKED`、`CLOSED`，必须同步刷新
 - 进度板内容必须与 `manifest.json` 当前态一致，并能和 `controller-log.jsonl` 最近事件互相印证，禁止手写与日志脱节的平行叙事
 - `current hypothesis` 的唯一来源固定为 `manifest.json.current_hypothesis`；若最近一次 `decision_made` 更新了假设，必须先回写 `manifest.json`，再刷新进度板，禁止直接摘抄 phase 文档或自由改写
@@ -263,9 +316,22 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 
 ## Shared 命令返回规则
 
-- `rpc-pod-triage`、`rpc-request-shape-check`、`cds`、`tcc` 完成后，不直接决定下一 phase
+- `rpc-pod-triage`、`rpc-request-shape-check`、`scm-sha-check`、`cds`、`tcc` 完成后，不直接决定下一 phase
 - shared 只返回当前阻塞是否解除、证据路径和建议动作
+- shared 若已验证部分断言，也必须通过 `acceptance_inputs` 回填给 controller
 - 主流程必须重新判断是回到 `rpc-goal-clarify`、重跑 `rpc-first-pass` 还是继续 `rpc-gap-loop`
+
+## Acceptance Manifest 规则
+
+- `goal-rpc-loop/acceptance-manifest.json` 是主流程唯一的验收归并输入
+- phase / shared 只能通过 `result.json.acceptance_inputs` 提供素材，不能直接写 `04-acceptance.md`
+- manifest 至少要能表达：
+  - 最终目标
+  - 最终 verdict
+  - 断言列表
+  - 每条断言的状态
+  - 每条断言的证据链接
+  - 每条断言来自哪个 phase / shared worker
 
 ## 多开任务复用建议
 
@@ -291,6 +357,7 @@ docs/social-pet/<YYYY-MM-DD>-<topic>/
 2. 已至少完成一个 phase worker，并生成对应 `result.json`
 3. 当前状态已明确为下一阶段、下一轮、shared 分支、阻塞或关闭
 4. `goal-rpc-loop/controller-log.jsonl` 已记录完整主流程关键事件
-5. `goal-rpc-loop/03-progress.md` 已与最近一次决策保持一致
+5. `goal-rpc-loop/02-progress.md` 已与最近一次决策保持一致
 6. `manifest.json.status` 已更新到最终状态
-7. `goal-rpc-loop/02-final-summary.md` 已由主流程统一写出
+7. `goal-rpc-loop/03-final-summary.md` 已由主流程统一写出
+8. `goal-rpc-loop/04-acceptance.md` 已由主流程统一写出，且断言均带可点击证据链接

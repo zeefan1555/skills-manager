@@ -22,7 +22,7 @@
 3. 再查代码找请求
 4. 跑第一轮请求
 5. 发现差异后进入第二轮循环
-6. 最后才整理总结
+6. 最后才整理总结与验收文档
 
 ## 推荐阅读顺序
 
@@ -46,7 +46,9 @@
 - `stock_summary.json`、`new_summary.json`
   - 更接近新版 `round-N/index.json` 或 `responses/normalized/`
 - `04-final-summary.md`
-  - 更接近新版 `closeout.md` 或顶层 `index.md` 的最终结论部分
+  - 更接近新版 `03-final-summary.md`
+- 新版 `04-acceptance.md`
+  - 旧案例中没有直接等价物，需要由 controller 从请求、回包、日志和断言素材自动归并生成
 
 也就是说，这个案例适合学习“链路推进方式”，但不应继续作为新任务的目录模板直接照抄。
 
@@ -61,7 +63,7 @@
 5. 能复用就最小修改复用，不能复用再新建本轮证据
 6. 结果不对时继续下一轮，并把差异写进新的 round 索引
 7. 必要时动态切去 `rpc-pod-triage` / `cds` / `tcc`
-8. 最后再收敛成 `closeout.md` 和顶层 `index.md`
+8. 最后由 controller 收敛成 `03-final-summary.md`、`04-acceptance.md` 和 `acceptance-manifest.json`
 
 ## 关键经验
 
@@ -71,3 +73,4 @@
 - 先保存证据，再下结论
 - 历史案例可以复用思路，但新任务应优先使用新版 `round/index.json/closeout` 结构
 - 当问题明显跨到日志 / 配置 / TCC 时，要及时切换对应命令，而不是在一个命令里硬撑到底
+- 新版 `04-acceptance.md` 中，每条断言都应至少带 1 条可点击的行级链接，便于人工验收
